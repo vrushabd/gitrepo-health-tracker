@@ -186,19 +186,26 @@ repoRouter.get('/:id/diff', async (req: Request, res: Response) => {
     const REPOS_DIR = process.env.REPOS_DIR || '/tmp/repopulse-repos';
     const repoDir = path.join(REPOS_DIR, id);
 
-    const [diffResult, fromSnapshot, toSnapshot] = await Promise.all([
+    const [diffResult, fromSnapshot, toSnapshot, fromCommitRec, toCommitRec] = await Promise.all([
       getDiffBetweenCommits(repoDir, from, to),
       prisma.healthSnapshot.findFirst({ where: { repositoryId: id, commitHash: from } }),
       prisma.healthSnapshot.findFirst({ where: { repositoryId: id, commitHash: to } }),
+      prisma.commit.findFirst({ where: { repositoryId: id, hash: from }, select: { graphData: true } }),
+      prisma.commit.findFirst({ where: { repositoryId: id, hash: to }, select: { graphData: true } }),
     ]);
 
     const healthDelta = (toSnapshot?.overallScore || 0) - (fromSnapshot?.overallScore || 0);
     const complexityDelta = (toSnapshot?.complexityScore || 0) - (fromSnapshot?.complexityScore || 0);
 
+    const fromGraph = fromCommitRec?.graphData ? JSON.parse(fromCommitRec.graphData) : { nodes: [], edges: [] };
+    const toGraph = toCommitRec?.graphData ? JSON.parse(toCommitRec.graphData) : { nodes: [], edges: [] };
+
     return res.json({
       fromCommit: from,
       toCommit: to,
       ...diffResult,
+      fromGraph,
+      toGraph,
       complexityDelta,
       testDelta: (toSnapshot?.testScore || 0) - (fromSnapshot?.testScore || 0),
       depDelta: (toSnapshot?.depCount || 0) - (fromSnapshot?.depCount || 0),

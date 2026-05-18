@@ -23,6 +23,7 @@
     "ioredis": "^5.4.2",
     "simple-git": "^3.27.0",
     "uuid": "^11.0.5",
+    "web-tree-sitter": "^0.26.8",
     "winston": "^3.17.0",
     "zod": "^3.24.1"
   },
