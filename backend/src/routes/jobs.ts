@@ -7,7 +7,7 @@ export const jobRouter = Router();
 // GET /api/jobs/:id/status
 jobRouter.get('/:id/status', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     const job = await prisma.analysisJob.findUnique({
       where: { id },
@@ -20,6 +20,8 @@ jobRouter.get('/:id/status', async (req: Request, res: Response) => {
 
     if (!job) return res.status(404).json({ error: 'Job not found' });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const jobWithRepo = job as any;
     return res.json({
       id: job.id,
       status: job.status,
@@ -29,7 +31,7 @@ jobRouter.get('/:id/status', async (req: Request, res: Response) => {
       startedAt: job.startedAt,
       completedAt: job.completedAt,
       createdAt: job.createdAt,
-      repository: job.repository,
+      repository: jobWithRepo.repository,
     });
   } catch (err) {
     logger.error('Job status error:', err);

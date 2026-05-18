@@ -16,7 +16,8 @@ import ScoreCard from '@/components/ScoreCard'
 import PremiumLogo from '@/components/PremiumLogo'
 import GraphDiffModal from '@/components/GraphDiffModal'
 import ArchitectureModal from '@/components/ArchitectureModal'
-import { Activity, GitMerge, FileCode, Users, Flame, LayoutDashboard, Settings, History, TestTube, Package, Sparkles, Code } from 'lucide-react'
+import { Activity, GitMerge, FileCode, Users, Flame, LayoutDashboard, Settings, History, TestTube, Package, Sparkles, Code, Sun, Moon } from 'lucide-react'
+import { useTheme } from '@/components/ThemeProvider'
 
 interface JobStatus {
   id: string
@@ -50,6 +51,7 @@ type ActiveTab = 'overview' | 'timeline' | 'hotspots' | 'contributors' | 'predic
 export default function DashboardPage() {
   const params = useParams()
   const searchParams = useSearchParams()
+  const { theme, toggle: toggleTheme } = useTheme()
   const repoId = params.repoId as string
   const jobId = searchParams.get('jobId')
 
@@ -233,6 +235,10 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            {/* Theme toggle */}
+            <button onClick={toggleTheme} className="theme-toggle" title="Toggle theme">
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
             <button
               onClick={() => setShowPredictModal(true)}
               className="neon-btn py-1.5 sm:py-2 px-2 sm:px-4 text-[10px] sm:text-xs flex items-center gap-1 sm:gap-2 whitespace-nowrap"
@@ -260,11 +266,7 @@ export default function DashboardPage() {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* ── TOP SCORE ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8"
-        >
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8 stagger-children">
           {/* Overall Score */}
           <div className="col-span-2 glass-card p-6 flex items-center gap-6">
             <HealthScoreRing score={health?.overallScore ?? 0} size={90} />
@@ -279,31 +281,28 @@ export default function DashboardPage() {
           </div>
 
           {/* Sub-scores */}
-          <ScoreCard label="Complexity" score={health?.complexityScore ?? 0} icon={<PremiumLogo query="puzzle logic piece" fallbackIcon={<Settings size={24} />} size={24} />} color="neon" />
-          <ScoreCard label="Test Health" score={health?.testScore ?? 0} icon={<PremiumLogo query="test tube science lab" fallbackIcon={<TestTube size={24} />} size={24} />} color="green" />
-          <ScoreCard label="Churn" score={health?.churnScore ?? 0} icon={<PremiumLogo query="sync cycle refresh" fallbackIcon={<History size={24} />} size={24} />} color="yellow" />
-          <ScoreCard label="Dependencies" score={health?.depScore ?? 0} icon={<PremiumLogo query="box package open" fallbackIcon={<Package size={24} />} size={24} />} color="purple" />
-        </motion.div>
+          <ScoreCard label="Complexity" score={health?.complexityScore ?? 0} icon={<PremiumLogo query="puzzle logic piece" fallbackIcon={<Settings size={24} />} size={24} />} color="neon" delay={0.1} />
+          <ScoreCard label="Test Health" score={health?.testScore ?? 0} icon={<PremiumLogo query="test tube science lab" fallbackIcon={<TestTube size={24} />} size={24} />} color="green" delay={0.2} />
+          <ScoreCard label="Churn" score={health?.churnScore ?? 0} icon={<PremiumLogo query="sync cycle refresh" fallbackIcon={<History size={24} />} size={24} />} color="yellow" delay={0.3} />
+          <ScoreCard label="Dependencies" score={health?.depScore ?? 0} icon={<PremiumLogo query="box package open" fallbackIcon={<Package size={24} />} size={24} />} color="purple" delay={0.4} />
+        </div>
 
         {/* Quick stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 stagger-children">
           {[
             { label: 'Hotspot Files', value: health?.hotspotCount ?? '--', icon: <PremiumLogo query="fire flame hotspot" fallbackIcon={<Flame size={28} />} size={28} /> },
             { label: 'Test Files', value: health?.testFiles ?? '--', icon: <PremiumLogo query="test tube science lab" fallbackIcon={<TestTube size={28} />} size={28} /> },
             { label: 'Code Files', value: health?.codeFiles ?? '--', icon: <PremiumLogo query="file document page text" fallbackIcon={<FileCode size={28} />} size={28} /> },
             { label: 'Dependencies', value: health?.depCount ?? '--', icon: <PremiumLogo query="box package open" fallbackIcon={<Package size={28} />} size={28} /> },
           ].map((s, i) => (
-            <motion.div
+            <div
               key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="stat-card"
+              className="stat-card hover:-translate-y-1 transition-transform duration-300"
             >
-              <div className="mb-2 flex items-center justify-start">{s.icon}</div>
+              <div className="mb-2 flex items-center justify-start animate-float" style={{ animationDelay: `${i * 0.2}s` }}>{s.icon}</div>
               <div className="text-2xl font-bold text-white">{s.value}</div>
               <div className="text-gray-500 text-sm mt-1">{s.label}</div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
@@ -328,10 +327,10 @@ export default function DashboardPage() {
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, y: 15, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -15, scale: 0.98 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
           >
             {activeTab === 'overview' && (
               <div className="grid lg:grid-cols-2 gap-6">

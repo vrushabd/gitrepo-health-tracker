@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: repopulse-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: REPOS_DIR
+        value: /tmp/repopulse-repos
+      - key: MAX_COMMITS
+        value: "500"

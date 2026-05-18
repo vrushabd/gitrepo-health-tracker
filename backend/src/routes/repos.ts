@@ -10,6 +10,10 @@ import * as path from 'path';
 
 export const repoRouter = Router();
 
+// Helper: cast Express params/query to string safely
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const p = (v: any): string => (Array.isArray(v) ? v[0] : (typeof v === 'object' ? '' : v)) ?? '';
+
 const analyzeSchema = z.object({
   url: z.string().url().refine(
     url => /github\.com\/[\w.-]+\/[\w.-]+/.test(url),
@@ -67,7 +71,7 @@ repoRouter.post('/analyze', async (req: Request, res: Response) => {
 // GET /api/repos/:id/health
 repoRouter.get('/:id/health', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = p(req.params.id);
 
     const [repo, latestSnapshot, job] = await Promise.all([
       prisma.repository.findUnique({ where: { id } }),
@@ -97,7 +101,7 @@ repoRouter.get('/:id/health', async (req: Request, res: Response) => {
 // GET /api/repos/:id/timeline
 repoRouter.get('/:id/timeline', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = p(req.params.id);
     const limit = parseInt(req.query.limit as string || '100', 10);
 
     const snapshots = await prisma.healthSnapshot.findMany({
@@ -125,8 +129,8 @@ repoRouter.get('/:id/timeline', async (req: Request, res: Response) => {
 // GET /api/repos/:id/hotspots
 repoRouter.get('/:id/hotspots', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const limit = parseInt(req.query.limit as string || '20', 10);
+    const id = p(req.params.id);
+    const limit = parseInt(p(req.query.limit) || '20', 10);
 
     // Aggregate file metrics — highest hotspot scores
     const hotspots = await prisma.fileMetric.groupBy({
@@ -142,11 +146,11 @@ repoRouter.get('/:id/hotspots', async (req: Request, res: Response) => {
       hotspots: hotspots.map(h => ({
         filePath: h.filePath,
         language: h.language,
-        hotspotScore: h._max.hotspotScore || 0,
-        complexity: h._max.complexity || 0,
-        churnCount: h._sum.churnCount || 0,
-        linesAdded: h._sum.linesAdded || 0,
-        linesRemoved: h._sum.linesRemoved || 0,
+        hotspotScore: h._max?.hotspotScore || 0,
+        complexity: h._max?.complexity || 0,
+        churnCount: h._sum?.churnCount || 0,
+        linesAdded: h._sum?.linesAdded || 0,
+        linesRemoved: h._sum?.linesRemoved || 0,
       })),
     });
   } catch (err) {
@@ -158,7 +162,7 @@ repoRouter.get('/:id/hotspots', async (req: Request, res: Response) => {
 // GET /api/repos/:id/contributors
 repoRouter.get('/:id/contributors', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = p(req.params.id);
 
     const contributors = await prisma.contributorStat.findMany({
       where: { repositoryId: id },
@@ -176,9 +180,9 @@ repoRouter.get('/:id/contributors', async (req: Request, res: Response) => {
 // GET /api/repos/:id/diff
 repoRouter.get('/:id/diff', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const from = req.query.from as string;
-    const to = req.query.to as string;
+    const id = p(req.params.id);
+    const from = p(req.query.from);
+    const to = p(req.query.to);
 
     if (!from || !to) {
       return res.status(400).json({ error: 'from and to commit hashes required' });
@@ -250,8 +254,8 @@ repoRouter.get('/:id/diff', async (req: Request, res: Response) => {
 // GET /api/repos/:id/graph
 repoRouter.get('/:id/graph', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const commitHash = req.query.commit as string;
+    const id = p(req.params.id);
+    const commitHash = p(req.query.commit);
 
     if (!commitHash) {
       return res.status(400).json({ error: 'commit hash required' });
@@ -287,7 +291,7 @@ repoRouter.get('/:id/graph', async (req: Request, res: Response) => {
 // POST /api/repos/:id/explain
 repoRouter.post('/:id/explain', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = p(req.params.id);
 
     const [repo, latestSnapshot, hotspots, commitCount] = await Promise.all([
       prisma.repository.findUnique({ where: { id } }),
@@ -340,7 +344,7 @@ repoRouter.post('/:id/explain', async (req: Request, res: Response) => {
 // POST /api/repos/:id/predict
 repoRouter.post('/:id/predict', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = p(req.params.id);
     let { filesModified = [], linesAdded = 0, linesRemoved = 0, newDependencies = [] } = req.body;
     const { prUrl } = req.body;
 
@@ -387,9 +391,9 @@ repoRouter.post('/:id/predict', async (req: Request, res: Response) => {
 // GET /api/repos/:id/commits
 repoRouter.get('/:id/commits', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const page = parseInt(req.query.page as string || '1', 10);
-    const limit = parseInt(req.query.limit as string || '50', 10);
+    const id = p(req.params.id);
+    const page = parseInt(p(req.query.page) || '1', 10);
+    const limit = parseInt(p(req.query.limit) || '50', 10);
 
     const [commits, total] = await Promise.all([
       prisma.commit.findMany({
