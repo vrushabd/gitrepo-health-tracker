@@ -1,13 +1,14 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { logger } from '../lib/logger';
+import { paramId } from '../lib/params';
 
 export const jobRouter = Router();
 
 // GET /api/jobs/:id/status
 jobRouter.get('/:id/status', async (req: Request, res: Response) => {
   try {
-    const id = req.params.id as string;
+    const id = paramId(req);
 
     const job = await prisma.analysisJob.findUnique({
       where: { id },

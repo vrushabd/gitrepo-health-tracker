@@ -28,8 +28,10 @@ export const repoApi = {
   getDiff: (repoId: string, from: string, to: string) =>
     api.get(`/api/repos/${repoId}/diff`, { params: { from, to } }).then(r => r.data),
 
-  getGraph: (repoId: string, commitHash: string) =>
-    api.get(`/api/repos/${repoId}/graph`, { params: { commit: commitHash } }).then(r => r.data),
+  getGraph: (repoId: string, commitHash?: string) =>
+    api.get(`/api/repos/${repoId}/graph`, {
+      params: commitHash ? { commit: commitHash } : {},
+    }).then(r => r.data),
 
   explain: (repoId: string) =>
     api.post(`/api/repos/${repoId}/explain`).then(r => r.data),
@@ -43,6 +45,23 @@ export const repoApi = {
 
   getCommits: (repoId: string, page = 1, limit = 50) =>
     api.get(`/api/repos/${repoId}/commits`, { params: { page, limit } }).then(r => r.data),
+};
+
+/** Feature 1: Repo Ingestion Engine API */
+export const ingestApi = {
+  analyze: (url: string) =>
+    api.post('/api/analyze', { url }).then(r => r.data),
+
+  getGraph: (repoId: string, commitHash?: string) =>
+    api.get(`/api/repo/${repoId}/graph`, {
+      params: commitHash ? { commit: commitHash } : {},
+    }).then(r => r.data),
+
+  getCommits: (repoId: string, page = 1, limit = 50) =>
+    api.get(`/api/repo/${repoId}/commits`, { params: { page, limit } }).then(r => r.data),
+
+  getHotspots: (repoId: string, limit = 20) =>
+    api.get(`/api/repo/${repoId}/hotspots`, { params: { limit } }).then(r => r.data),
 };
 
 export const jobApi = {

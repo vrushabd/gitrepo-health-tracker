@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import { repoRouter } from './routes/repos';
 import { jobRouter } from './routes/jobs';
+import { ingestRouter } from './routes/ingest';
 import { logger } from './lib/logger';
 
 dotenv.config();
@@ -43,6 +44,8 @@ app.get('/health', (_, res) => {
 // Routes
 app.use('/api/repos', repoRouter);
 app.use('/api/jobs', jobRouter);
+// Feature 1: Repo Ingestion Engine API surface
+app.use('/api', ingestRouter);
 
 // Error handler
 app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {

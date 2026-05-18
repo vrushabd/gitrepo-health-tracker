@@ -95,3 +95,5 @@ export const COMPLEXITY_KEYWORDS = [
 ];
 
 export const TEST_PATTERNS = ['test', 'spec', '__tests__', '.test.', '.spec.'];
+
+export * from './graph';

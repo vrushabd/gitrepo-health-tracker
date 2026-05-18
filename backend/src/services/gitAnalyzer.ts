@@ -197,6 +197,39 @@ export async function getRepoInfo(repoDir: string): Promise<{
   }
 }
 
+/** Per-commit file change classification for incremental graph patching */
+export async function getCommitFileChanges(
+  repoDir: string,
+  commitHash: string
+): Promise<{ added: string[]; modified: string[]; deleted: string[] }> {
+  const git: SimpleGit = simpleGit(repoDir);
+  let nameStatus: string;
+
+  try {
+    nameStatus = await git.raw(['diff', '--name-status', `${commitHash}^`, commitHash]);
+  } catch {
+    nameStatus = await git.raw(['show', '--name-status', '--format=', commitHash]);
+  }
+
+  const added: string[] = [];
+  const modified: string[] = [];
+  const deleted: string[] = [];
+
+  for (const line of nameStatus.trim().split('\n').filter(Boolean)) {
+    const tab = line.indexOf('\t');
+    if (tab < 0) continue;
+    const status = line.slice(0, tab).trim();
+    const filePath = line.slice(tab + 1).trim();
+    if (!filePath || !isSupportedFile(filePath)) continue;
+
+    if (status === 'A') added.push(filePath);
+    else if (status === 'D') deleted.push(filePath);
+    else if (status.startsWith('M') || status.startsWith('R')) modified.push(filePath);
+  }
+
+  return { added, modified, deleted };
+}
+
 export async function getDiffBetweenCommits(
   repoDir: string,
   fromHash: string,
