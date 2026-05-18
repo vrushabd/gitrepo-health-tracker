@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --cyber-neon: #00f5ff;
+    --cyber-pink: #ff2d78;
+    --cyber-purple: #8b5cf6;
+    --cyber-green: #00ff9f;
+    --cyber-bg: #050914;
+    --cyber-card: #0a1628;
+    --cyber-border: #1a2d4a;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--cyber-bg);
+    background-image:
+      linear-gradient(rgba(0,245,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,255,0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #050914;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1a2d4a;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #00f5ff44;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-cyber-card/80 backdrop-blur-md border border-cyber-border rounded-xl;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .neon-text {
+    color: #00f5ff;
+    text-shadow: 0 0 10px rgba(0,245,255,0.8), 0 0 30px rgba(0,245,255,0.3);
+  }
+
+  .neon-border {
+    border-color: rgba(0,245,255,0.4);
+    box-shadow: 0 0 15px rgba(0,245,255,0.2), inset 0 0 15px rgba(0,245,255,0.05);
+  }
+
+  .pink-text {
+    color: #ff2d78;
+    text-shadow: 0 0 10px rgba(255,45,120,0.8);
+  }
+
+  .green-text {
+    color: #00ff9f;
+    text-shadow: 0 0 10px rgba(0,255,159,0.6);
+  }
+
+  .neon-btn {
+    @apply relative px-6 py-3 rounded-lg font-semibold text-sm tracking-wider uppercase transition-all duration-300;
+    background: linear-gradient(135deg, rgba(0,245,255,0.1), rgba(0,245,255,0.05));
+    border: 1px solid rgba(0,245,255,0.4);
+    color: #00f5ff;
+    box-shadow: 0 0 20px rgba(0,245,255,0.2);
+  }
+
+  .neon-btn:hover {
+    background: linear-gradient(135deg, rgba(0,245,255,0.2), rgba(0,245,255,0.1));
+    box-shadow: 0 0 30px rgba(0,245,255,0.4), 0 0 60px rgba(0,245,255,0.1);
+    transform: translateY(-1px);
+  }
+
+  .neon-btn-pink {
+    @apply relative px-6 py-3 rounded-lg font-semibold text-sm tracking-wider uppercase transition-all duration-300;
+    background: linear-gradient(135deg, rgba(255,45,120,0.15), rgba(255,45,120,0.05));
+    border: 1px solid rgba(255,45,120,0.5);
+    color: #ff2d78;
+    box-shadow: 0 0 20px rgba(255,45,120,0.2);
+  }
+
+  .neon-btn-pink:hover {
+    box-shadow: 0 0 30px rgba(255,45,120,0.5);
+    transform: translateY(-1px);
+  }
+
+  .score-ring {
+    filter: drop-shadow(0 0 8px currentColor);
+  }
+
+  .hotspot-high { color: #ff2d78; }
+  .hotspot-medium { color: #ffd700; }
+  .hotspot-low { color: #00ff9f; }
+
+  .stat-card {
+    @apply glass-card p-5 hover:border-cyber-neon/30 transition-all duration-300;
+  }
+
+  .stat-card:hover {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(0,245,255,0.1);
+  }
+}
+
+@layer utilities {
+  .text-glow-neon {
+    text-shadow: 0 0 10px rgba(0,245,255,0.8), 0 0 30px rgba(0,245,255,0.4);
+  }
+  .text-glow-pink {
+    text-shadow: 0 0 10px rgba(255,45,120,0.8), 0 0 30px rgba(255,45,120,0.4);
+  }
+  .border-glow-neon {
+    box-shadow: 0 0 15px rgba(0,245,255,0.3);
+  }
+  .bg-cyber-grid {
+    background-image:
+      linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+}
