@@ -16,7 +16,8 @@ import ScoreCard from '@/components/ScoreCard'
 import PremiumLogo from '@/components/PremiumLogo'
 import GraphDiffModal from '@/components/GraphDiffModal'
 import ArchitectureModal from '@/components/ArchitectureModal'
-import { Activity, GitMerge, FileCode, Users, Flame, LayoutDashboard, Settings, History, TestTube, Package, Sparkles, Code } from 'lucide-react'
+import { Activity, GitMerge, FileCode, Users, Flame, LayoutDashboard, Settings, History, TestTube, Package, Sparkles, Code, Sun, Moon } from 'lucide-react'
+import { useTheme } from '@/components/ThemeProvider'
 
 interface JobStatus {
   id: string
@@ -50,6 +51,7 @@ type ActiveTab = 'overview' | 'timeline' | 'hotspots' | 'contributors' | 'predic
 export default function DashboardPage() {
   const params = useParams()
   const searchParams = useSearchParams()
+  const { theme, toggle: toggleTheme } = useTheme()
   const repoId = params.repoId as string
   const jobId = searchParams.get('jobId')
 
@@ -233,6 +235,10 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            {/* Theme toggle */}
+            <button onClick={toggleTheme} className="theme-toggle" title="Toggle theme">
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
             <button
               onClick={() => setShowPredictModal(true)}
               className="neon-btn py-1.5 sm:py-2 px-2 sm:px-4 text-[10px] sm:text-xs flex items-center gap-1 sm:gap-2 whitespace-nowrap"
