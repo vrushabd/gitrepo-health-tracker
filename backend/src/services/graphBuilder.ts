@@ -20,7 +20,6 @@ export interface CodeGraph {
   edges: GraphEdge[];
 }
 
-// Simulates tree-sitter parsing for hackathon MVP (fallback due to node-gyp native binding errors)
 export async function buildCommitGraph(repoDir: string): Promise<CodeGraph> {
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
@@ -29,38 +28,100 @@ export async function buildCommitGraph(repoDir: string): Promise<CodeGraph> {
     const entries = await fs.readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
-      if (entry.name === '.git' || entry.name === 'node_modules') continue;
+      if (entry.name === '.git' || entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
       
       if (entry.isDirectory()) {
         await walk(fullPath);
       } else {
-        const ext = path.extname(entry.name);
+        const ext = path.extname(entry.name).toLowerCase();
         if (SUPPORTED_EXTENSIONS.has(ext)) {
           const relPath = path.relative(repoDir, fullPath);
           nodes.push({ id: relPath, type: 'file', name: entry.name });
           
           try {
             const content = await fs.readFile(fullPath, 'utf8');
-            
-            // Extract imports
-            const importRegex = /import\s+.*from\s+['"](.*)['"]/g;
             let match;
-            while ((match = importRegex.exec(content)) !== null) {
-              const target = match[1];
-              // Avoid adding external dependencies to internal graph
-              if (target.startsWith('.') || target.startsWith('/')) {
-                edges.push({ source: relPath, target: target, type: 'imports' });
+
+            // 1. JAVA PARSING
+            if (ext === '.java') {
+              const javaImport = /import\s+([\w\.]+);/g;
+              while ((match = javaImport.exec(content))) {
+                edges.push({ source: relPath, target: match[1], type: 'imports' });
+              }
+              const javaClass = /(?:public|private|protected)?\s*(?:static\s+)?(?:final\s+)?class\s+(\w+)/g;
+              while ((match = javaClass.exec(content))) {
+                const id = `${relPath}::${match[1]}`;
+                nodes.push({ id, type: 'class', name: match[1] });
+                edges.push({ source: relPath, target: id, type: 'contains' });
+              }
+              const javaMethod = /(?:public|private|protected)\s+(?:static\s+)?(?:final\s+)?[\w<>\[\]]+\s+(\w+)\s*\(/g;
+              while ((match = javaMethod.exec(content))) {
+                const id = `${relPath}::${match[1]}`;
+                nodes.push({ id, type: 'function', name: match[1] });
+                edges.push({ source: relPath, target: id, type: 'contains' });
+              }
+            }
+
+            // 2. PYTHON PARSING
+            else if (ext === '.py') {
+              const pyImport = /^(?:from\s+(\w+)\s+)?import\s+([\w,\s]+)/gm;
+              while ((match = pyImport.exec(content))) {
+                const target = match[1] || match[2].split(',')[0].trim();
+                edges.push({ source: relPath, target, type: 'imports' });
+              }
+              const pyClass = /^class\s+(\w+)(?:\([^)]*\))?:/gm;
+              while ((match = pyClass.exec(content))) {
+                const id = `${relPath}::${match[1]}`;
+                nodes.push({ id, type: 'class', name: match[1] });
+                edges.push({ source: relPath, target: id, type: 'contains' });
+              }
+              const pyDef = /^def\s+(\w+)\s*\(/gm;
+              while ((match = pyDef.exec(content))) {
+                const id = `${relPath}::${match[1]}`;
+                nodes.push({ id, type: 'function', name: match[1] });
+                edges.push({ source: relPath, target: id, type: 'contains' });
+              }
+            }
+
+            // 3. JS/TS PARSING
+            else if (ext === '.js' || ext === '.ts' || ext === '.jsx' || ext === '.tsx') {
+              const jsImport = /import\s+.*?from\s+['"](.*?)['"]/g;
+              while ((match = jsImport.exec(content))) {
+                edges.push({ source: relPath, target: match[1], type: 'imports' });
+              }
+              const jsClass = /class\s+(\w+)/g;
+              while ((match = jsClass.exec(content))) {
+                const id = `${relPath}::${match[1]}`;
+                nodes.push({ id, type: 'class', name: match[1] });
+                edges.push({ source: relPath, target: id, type: 'contains' });
+              }
+              const jsFunc = /(?:function\s+(\w+)|const\s+(\w+)\s*=\s*(?:async\s*)?(?:\([^)]*\)|[^=]+)\s*=>)/g;
+              while ((match = jsFunc.exec(content))) {
+                const name = match[1] || match[2];
+                if (!name) continue;
+                const id = `${relPath}::${name}`;
+                nodes.push({ id, type: 'function', name });
+                edges.push({ source: relPath, target: id, type: 'contains' });
               }
             }
             
-            // Extract functions
-            const funcRegex = /function\s+(\w+)\s*\(/g;
-            while ((match = funcRegex.exec(content)) !== null) {
-              const funcName = match[1];
-              const funcId = `${relPath}::${funcName}`;
-              nodes.push({ id: funcId, type: 'function', name: funcName });
-              edges.push({ source: relPath, target: funcId, type: 'contains' });
+            // 4. GO PARSING
+            else if (ext === '.go') {
+              const goImport = /import\s+(?:\(\s*([^)]+)\s*\)|"([^"]+)")/g;
+              while ((match = goImport.exec(content))) {
+                const imports = match[1] ? match[1].match(/"([^"]+)"/g) : [match[2]];
+                if (imports) {
+                  imports.forEach(imp => edges.push({ source: relPath, target: imp.replace(/"/g, ''), type: 'imports' }));
+                }
+              }
+              const goFunc = /func\s+(?:\([^)]+\)\s+)?(\w+)\s*\(/g;
+              while ((match = goFunc.exec(content))) {
+                const id = `${relPath}::${match[1]}`;
+                nodes.push({ id, type: 'function', name: match[1] });
+                edges.push({ source: relPath, target: id, type: 'contains' });
+              }
             }
+
           } catch (err) {
              // Ignore read errors
           }
@@ -69,6 +130,11 @@ export async function buildCommitGraph(repoDir: string): Promise<CodeGraph> {
     }
   }
   
-  await walk(repoDir);
+  try {
+    await walk(repoDir);
+  } catch (err) {
+    logger.warn('Failed to build graph:', err);
+  }
+  
   return { nodes, edges };
 }
