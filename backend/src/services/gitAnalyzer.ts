@@ -65,7 +65,7 @@ export async function cloneRepository(repoUrl: string, repoId: string): Promise<
     await fs.access(repoDir);
     logger.info(`Repo already cloned at ${repoDir}, pulling latest...`);
     const git = simpleGit(repoDir);
-    await git.fetch(['--all']);
+    await git.fetch(['--all', '--depth', String(MAX_COMMITS + 50)]);
     return repoDir;
   } catch {
     logger.info(`Cloning ${repoUrl} to ${repoDir}`);
