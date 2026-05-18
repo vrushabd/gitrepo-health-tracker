@@ -82,19 +82,21 @@ export async function runAnalysis(jobId: string, repositoryId: string, repoUrl: 
         // Update file ownership
         for (const fp of filesChanged) {
           const owners = fileOwnership.get(fp) || [];
-          if (!owners.includes(commit.authorEmail)) owners.push(commit.authorEmail);
+          const emailSafe = commit.authorEmail || 'unknown@example.com';
+          if (!owners.includes(emailSafe)) owners.push(emailSafe);
           fileOwnership.set(fp, owners);
         }
 
         // Update contributor stats
-        const contrib = contributorMap.get(commit.authorEmail) || {
+        const emailSafe = commit.authorEmail || 'unknown@example.com';
+        const contrib = contributorMap.get(emailSafe) || {
           commitCount: 0, linesAdded: 0, linesRemoved: 0, filesModified: new Set(),
         };
         contrib.commitCount++;
         contrib.linesAdded += insertions;
         contrib.linesRemoved += deletions;
         filesChanged.forEach(f => contrib.filesModified.add(f));
-        contributorMap.set(commit.authorEmail, contrib);
+        contributorMap.set(emailSafe, contrib);
 
         // Check for package.json changes (dep tracking)
         const hasDepChange = filesChanged.some(f =>
@@ -123,8 +125,8 @@ export async function runAnalysis(jobId: string, repositoryId: string, repoUrl: 
           repositoryId,
           hash: commit.hash,
           message: commit.message.slice(0, 500),
-          author: commit.author,
-          authorEmail: commit.authorEmail,
+          author: commit.author || '',
+          authorEmail: commit.authorEmail || '',
           committedAt: new Date(commit.date),
           filesChanged: filesChanged.length,
           insertions,
@@ -201,7 +203,7 @@ export async function runAnalysis(jobId: string, repositoryId: string, repoUrl: 
 
     // Upsert contributor stats
     for (const [email, stats] of contributorMap) {
-      const commit = orderedCommits.find(c => c.authorEmail === email);
+      const commit = orderedCommits.find(c => (c.authorEmail || 'unknown@example.com') === email);
       if (!commit) continue;
 
       const ownedFiles = [...fileOwnership.entries()]
@@ -219,18 +221,18 @@ export async function runAnalysis(jobId: string, repositoryId: string, repoUrl: 
           linesAdded: stats.linesAdded,
           linesRemoved: stats.linesRemoved,
           filesOwned: ownedFiles.length,
-          criticalModules: criticalFiles,
+          criticalModules: JSON.stringify(criticalFiles),
           busFactor: calculateBusFactor(fileOwnership, fileOwnership.size),
         },
         create: {
           repositoryId,
-          author: commit.author,
+          author: commit.author || 'Unknown',
           authorEmail: email,
           commitCount: stats.commitCount,
           linesAdded: stats.linesAdded,
           linesRemoved: stats.linesRemoved,
           filesOwned: ownedFiles.length,
-          criticalModules: criticalFiles,
+          criticalModules: JSON.stringify(criticalFiles),
           busFactor: calculateBusFactor(fileOwnership, fileOwnership.size),
         },
       });
@@ -260,9 +262,31 @@ async function flushBatches(
   snapshots: Parameters<typeof prisma.healthSnapshot.createMany>[0]['data'],
   fileMetrics: Parameters<typeof prisma.fileMetric.createMany>[0]['data']
 ) {
-  await Promise.all([
-    prisma.commit.createMany({ data: commits, skipDuplicates: true }),
-    prisma.healthSnapshot.createMany({ data: snapshots, skipDuplicates: true }),
-    prisma.fileMetric.createMany({ data: fileMetrics, skipDuplicates: true }),
-  ]);
+  // SQLite + Prisma does not support skipDuplicates in createMany.
+  // Use individual upserts via Promise.allSettled to gracefully skip conflicts.
+  await Promise.allSettled(
+    (commits as any[]).map((c) =>
+      prisma.commit.upsert({
+        where: { repositoryId_hash: { repositoryId: c.repositoryId, hash: c.hash } },
+        update: {},
+        create: c,
+      })
+    )
+  );
+
+  await Promise.allSettled(
+    (snapshots as any[]).map((s) =>
+      prisma.healthSnapshot.upsert({
+        where: { repositoryId_commitHash: { repositoryId: s.repositoryId, commitHash: s.commitHash } },
+        update: {},
+        create: s,
+      })
+    )
+  );
+
+  await Promise.allSettled(
+    (fileMetrics as any[]).map((fm) =>
+      prisma.fileMetric.create({ data: fm }).catch(() => null)
+    )
+  );
 }

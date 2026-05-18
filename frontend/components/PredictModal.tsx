@@ -27,17 +27,22 @@ export default function PredictModal({ repoId, onClose }: Props) {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<PredictResult | null>(null)
   const [error, setError] = useState('')
+  const [mode, setMode] = useState<'manual' | 'pr'>('pr')
+  const [prUrl, setPrUrl] = useState('')
 
   const handlePredict = async () => {
     setLoading(true)
     setError('')
     try {
-      const res = await repoApi.predict(repoId, {
-        filesModified: files.split('\n').map(f => f.trim()).filter(Boolean),
-        linesAdded,
-        linesRemoved,
-        newDependencies: deps.split('\n').map(d => d.trim()).filter(Boolean),
-      })
+      const payload = mode === 'pr' 
+        ? { prUrl: prUrl.trim() }
+        : {
+            filesModified: files.split('\n').map(f => f.trim()).filter(Boolean),
+            linesAdded,
+            linesRemoved,
+            newDependencies: deps.split('\n').map(d => d.trim()).filter(Boolean),
+          }
+      const res = await repoApi.predict(repoId, payload)
       setResult(res)
     } catch {
       setError('Prediction failed. Please try again.')
@@ -83,51 +88,84 @@ export default function PredictModal({ repoId, onClose }: Props) {
             </button>
           </div>
 
+          <div className="flex bg-cyber-card border border-cyber-border rounded-xl mb-6 p-1">
+            <button
+              onClick={() => setMode('pr')}
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'pr' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500 hover:text-gray-300'}`}
+            >
+              Analyze via PR URL
+            </button>
+            <button
+              onClick={() => setMode('manual')}
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'manual' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500 hover:text-gray-300'}`}
+            >
+              Manual Input
+            </button>
+          </div>
+
           <div className="space-y-4 mb-6">
-            <div>
-              <label className="text-gray-400 text-sm mb-1 block">Files to Modify (one per line)</label>
-              <textarea
-                value={files}
-                onChange={e => setFiles(e.target.value)}
-                rows={3}
-                placeholder="src/auth/AuthService.ts&#10;src/payment/PaymentGateway.ts"
-                className="w-full px-4 py-3 rounded-xl bg-cyber-card border border-cyber-border text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/60 text-sm font-mono resize-none"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+            {mode === 'pr' ? (
               <div>
-                <label className="text-gray-400 text-sm mb-1 block">Lines Added</label>
+                <label className="text-gray-400 text-sm mb-1 block">GitHub Pull Request URL</label>
                 <input
-                  type="number"
-                  value={linesAdded}
-                  onChange={e => setLinesAdded(Number(e.target.value))}
-                  min={0}
-                  className="w-full px-4 py-3 rounded-xl bg-cyber-card border border-cyber-border text-white focus:outline-none focus:border-cyan-500/60 text-sm font-mono"
+                  type="text"
+                  value={prUrl}
+                  onChange={e => setPrUrl(e.target.value)}
+                  placeholder="https://github.com/tiangolo/fastapi/pull/123"
+                  className="w-full px-4 py-3 rounded-xl bg-cyber-card border border-cyber-border text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/60 text-sm font-mono"
                 />
+                <p className="text-xs text-gray-500 mt-2">
+                  We will automatically fetch the PR diff and calculate lines added, removed, and dependencies changed.
+                </p>
               </div>
-              <div>
-                <label className="text-gray-400 text-sm mb-1 block">Lines Removed</label>
-                <input
-                  type="number"
-                  value={linesRemoved}
-                  onChange={e => setLinesRemoved(Number(e.target.value))}
-                  min={0}
-                  className="w-full px-4 py-3 rounded-xl bg-cyber-card border border-cyber-border text-white focus:outline-none focus:border-cyan-500/60 text-sm font-mono"
-                />
-              </div>
-            </div>
+            ) : (
+              <>
+                <div>
+                  <label className="text-gray-400 text-sm mb-1 block">Files to Modify (one per line)</label>
+                  <textarea
+                    value={files}
+                    onChange={e => setFiles(e.target.value)}
+                    rows={3}
+                    placeholder="src/auth/AuthService.ts&#10;src/payment/PaymentGateway.ts"
+                    className="w-full px-4 py-3 rounded-xl bg-cyber-card border border-cyber-border text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/60 text-sm font-mono resize-none"
+                  />
+                </div>
 
-            <div>
-              <label className="text-gray-400 text-sm mb-1 block">New Dependencies (one per line)</label>
-              <textarea
-                value={deps}
-                onChange={e => setDeps(e.target.value)}
-                rows={2}
-                placeholder="lodash&#10;moment"
-                className="w-full px-4 py-3 rounded-xl bg-cyber-card border border-cyber-border text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/60 text-sm font-mono resize-none"
-              />
-            </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-gray-400 text-sm mb-1 block">Lines Added</label>
+                    <input
+                      type="number"
+                      value={linesAdded}
+                      onChange={e => setLinesAdded(Number(e.target.value))}
+                      min={0}
+                      className="w-full px-4 py-3 rounded-xl bg-cyber-card border border-cyber-border text-white focus:outline-none focus:border-cyan-500/60 text-sm font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-gray-400 text-sm mb-1 block">Lines Removed</label>
+                    <input
+                      type="number"
+                      value={linesRemoved}
+                      onChange={e => setLinesRemoved(Number(e.target.value))}
+                      min={0}
+                      className="w-full px-4 py-3 rounded-xl bg-cyber-card border border-cyber-border text-white focus:outline-none focus:border-cyan-500/60 text-sm font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-gray-400 text-sm mb-1 block">New Dependencies (one per line)</label>
+                  <textarea
+                    value={deps}
+                    onChange={e => setDeps(e.target.value)}
+                    rows={2}
+                    placeholder="lodash&#10;moment"
+                    className="w-full px-4 py-3 rounded-xl bg-cyber-card border border-cyber-border text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/60 text-sm font-mono resize-none"
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           <button

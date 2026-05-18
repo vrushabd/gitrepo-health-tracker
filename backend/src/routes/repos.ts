@@ -5,6 +5,7 @@ import { logger } from '../lib/logger';
 import { runAnalysis } from '../services/analysisWorker';
 import { getDiffBetweenCommits } from '../services/gitAnalyzer';
 import { explainHealthMetrics, predictMergeImpact } from '../lib/gemini';
+import { parsePrDiff } from '../lib/diffParser';
 import * as path from 'path';
 
 export const repoRouter = Router();
@@ -267,7 +268,16 @@ repoRouter.post('/:id/explain', async (req: Request, res: Response) => {
 repoRouter.post('/:id/predict', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { filesModified = [], linesAdded = 0, linesRemoved = 0, newDependencies = [] } = req.body;
+    let { filesModified = [], linesAdded = 0, linesRemoved = 0, newDependencies = [] } = req.body;
+    const { prUrl } = req.body;
+
+    if (prUrl) {
+      const parsedDiff = await parsePrDiff(prUrl);
+      filesModified = parsedDiff.filesModified;
+      linesAdded = parsedDiff.linesAdded;
+      linesRemoved = parsedDiff.linesRemoved;
+      newDependencies = parsedDiff.newDependencies;
+    }
 
     const latestSnapshot = await prisma.healthSnapshot.findFirst({
       where: { repositoryId: id },

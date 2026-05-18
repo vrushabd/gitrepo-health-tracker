@@ -9,7 +9,12 @@ interface Contributor {
   linesRemoved: number
   filesOwned: number
   busFactor: number
-  criticalModules: string[]
+  criticalModules: string[] | string
+}
+
+function parseCriticalModules(raw: string[] | string): string[] {
+  if (Array.isArray(raw)) return raw
+  try { return JSON.parse(raw) } catch { return [] }
 }
 
 interface Props {
@@ -105,18 +110,21 @@ export default function ContributorLeaderboard({ contributors }: Props) {
               <span><span className="text-purple-400 font-mono">{c.filesOwned}</span> files owned</span>
             </div>
 
-            {c.criticalModules.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1">
-                {c.criticalModules.slice(0, 4).map((m, j) => (
-                  <span key={j} className="px-1.5 py-0.5 rounded text-xs bg-red-500/10 text-red-400 font-mono border border-red-500/20">
-                    {m.split('/').pop()}
-                  </span>
-                ))}
-                {c.criticalModules.length > 4 && (
-                  <span className="text-gray-600 text-xs">+{c.criticalModules.length - 4} more</span>
-                )}
-              </div>
-            )}
+            {(() => {
+              const modules = parseCriticalModules(c.criticalModules)
+              return modules.length > 0 ? (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {modules.slice(0, 4).map((m: string, j: number) => (
+                    <span key={j} className="px-1.5 py-0.5 rounded text-xs bg-red-500/10 text-red-400 font-mono border border-red-500/20">
+                      {m.split('/').pop()}
+                    </span>
+                  ))}
+                  {modules.length > 4 && (
+                    <span className="text-gray-600 text-xs">+{modules.length - 4} more</span>
+                  )}
+                </div>
+              ) : null
+            })()}
           </div>
         </div>
       ))}

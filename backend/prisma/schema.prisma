@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -31,16 +31,16 @@ model Repository {
 }
 
 model AnalysisJob {
-  id           String    @id @default(cuid())
+  id           String   @id @default(cuid())
   repositoryId String
-  status       JobStatus @default(PENDING)
-  progress     Int       @default(0)
-  totalCommits Int       @default(0)
+  status       String   @default("PENDING")
+  progress     Int      @default(0)
+  totalCommits Int      @default(0)
   error        String?
   startedAt    DateTime?
   completedAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
 
@@ -49,22 +49,22 @@ model AnalysisJob {
 }
 
 model Commit {
-  id             String   @id @default(cuid())
-  repositoryId   String
-  hash           String
-  message        String
-  author         String
-  authorEmail    String
-  committedAt    DateTime
-  filesChanged   Int      @default(0)
-  insertions     Int      @default(0)
-  deletions      Int      @default(0)
-  healthScore    Float?
-  complexityDelta Float   @default(0)
-  testDelta      Float    @default(0)
-  depDelta       Float    @default(0)
-  churnDelta     Float    @default(0)
-  createdAt      DateTime @default(now())
+  id              String   @id @default(cuid())
+  repositoryId    String
+  hash            String
+  message         String
+  author          String   @default("")
+  authorEmail     String   @default("")
+  committedAt     DateTime
+  filesChanged    Int      @default(0)
+  insertions      Int      @default(0)
+  deletions       Int      @default(0)
+  healthScore     Float?
+  complexityDelta Float    @default(0)
+  testDelta       Float    @default(0)
+  depDelta        Float    @default(0)
+  churnDelta      Float    @default(0)
+  createdAt       DateTime @default(now())
 
   repository  Repository   @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
   fileMetrics FileMetric[]
@@ -99,26 +99,28 @@ model FileMetric {
 }
 
 model HealthSnapshot {
-  id               String   @id @default(cuid())
-  repositoryId     String
-  commitHash       String
-  overallScore     Float
-  complexityScore  Float
-  testScore        Float
-  churnScore       Float
-  depScore         Float
-  hotspotCount     Int      @default(0)
-  totalFiles       Int      @default(0)
-  testFiles        Int      @default(0)
-  codeFiles        Int      @default(0)
-  depCount         Int      @default(0)
-  snapshotAt       DateTime
+  id              String   @id @default(cuid())
+  repositoryId    String
+  commitHash      String
+  overallScore    Float
+  complexityScore Float
+  testScore       Float
+  churnScore      Float
+  depScore        Float
+  hotspotCount    Int      @default(0)
+  totalFiles      Int      @default(0)
+  testFiles       Int      @default(0)
+  codeFiles       Int      @default(0)
+  depCount        Int      @default(0)
+  snapshotAt      DateTime
+  createdAt       DateTime @default(now())
 
   repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
 
+  @@unique([repositoryId, commitHash])
   @@index([repositoryId])
   @@index([commitHash])
-  @@index([createdAt(sort: Desc)])
+  @@index([createdAt])
   @@map("health_snapshots")
 }
 
@@ -132,7 +134,7 @@ model ContributorStat {
   linesAdded      Int      @default(0)
   linesRemoved    Int      @default(0)
   busFactor       Float    @default(1.0)
-  criticalModules String[] @default([])
+  criticalModules String   @default("[]")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -140,11 +142,4 @@ model ContributorStat {
 
   @@unique([repositoryId, authorEmail])
   @@index([repositoryId])
-}
-
-enum JobStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
 }
