@@ -1,0 +1,46 @@
+# RepoPulse AI — Git Ignore
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+dist/
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Keep examples
+!.env.example
+
+# Build
+build/
+dist/
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+
+# Cloned repos (temp)
+/tmp/repopulse-repos/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# Prisma
+backend/prisma/migrations/
+
+# TypeScript
+*.tsbuildinfo

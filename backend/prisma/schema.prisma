@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Repository {
+  id          String   @id @default(cuid())
+  url         String   @unique
+  owner       String
+  name        String
+  description String?
+  language    String?
+  stars       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  commits          Commit[]
+  fileMetrics      FileMetric[]
+  healthSnapshots  HealthSnapshot[]
+  contributorStats ContributorStat[]
+  analysisJobs     AnalysisJob[]
+
+  @@index([id])
+}
+
+model AnalysisJob {
+  id           String    @id @default(cuid())
+  repositoryId String
+  status       JobStatus @default(PENDING)
+  progress     Int       @default(0)
+  totalCommits Int       @default(0)
+  error        String?
+  startedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@index([repositoryId])
+  @@index([createdAt])
+}
+
+model Commit {
+  id             String   @id @default(cuid())
+  repositoryId   String
+  hash           String
+  message        String
+  author         String
+  authorEmail    String
+  committedAt    DateTime
+  filesChanged   Int      @default(0)
+  insertions     Int      @default(0)
+  deletions      Int      @default(0)
+  healthScore    Float?
+  complexityDelta Float   @default(0)
+  testDelta      Float    @default(0)
+  depDelta       Float    @default(0)
+  churnDelta     Float    @default(0)
+  createdAt      DateTime @default(now())
+
+  repository  Repository   @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  fileMetrics FileMetric[]
+
+  @@unique([repositoryId, hash])
+  @@index([repositoryId])
+  @@index([hash])
+  @@index([createdAt])
+}
+
+model FileMetric {
+  id             String   @id @default(cuid())
+  repositoryId   String
+  commitId       String?
+  filePath       String
+  language       String?
+  complexity     Float    @default(0)
+  churnCount     Int      @default(0)
+  hotspotScore   Float    @default(0)
+  isTest         Boolean  @default(false)
+  linesAdded     Int      @default(0)
+  linesRemoved   Int      @default(0)
+  lastModifiedAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  commit     Commit?    @relation(fields: [commitId], references: [id], onDelete: SetNull)
+
+  @@index([repositoryId])
+  @@index([filePath])
+  @@index([createdAt])
+}
+
+model HealthSnapshot {
+  id               String   @id @default(cuid())
+  repositoryId     String
+  commitHash       String
+  overallScore     Float
+  complexityScore  Float
+  testScore        Float
+  churnScore       Float
+  depScore         Float
+  hotspotCount     Int      @default(0)
+  totalFiles       Int      @default(0)
+  testFiles        Int      @default(0)
+  codeFiles        Int      @default(0)
+  depCount         Int      @default(0)
+  snapshotAt       DateTime
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@index([repositoryId])
+  @@index([commitHash])
+  @@index([createdAt(sort: Desc)])
+  @@map("health_snapshots")
+}
+
+model ContributorStat {
+  id              String   @id @default(cuid())
+  repositoryId    String
+  author          String
+  authorEmail     String
+  commitCount     Int      @default(0)
+  filesOwned      Int      @default(0)
+  linesAdded      Int      @default(0)
+  linesRemoved    Int      @default(0)
+  busFactor       Float    @default(1.0)
+  criticalModules String[] @default([])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@unique([repositoryId, authorEmail])
+  @@index([repositoryId])
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
