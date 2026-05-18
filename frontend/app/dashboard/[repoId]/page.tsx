@@ -14,7 +14,8 @@ import PredictModal from '@/components/PredictModal'
 import ScoreCard from '@/components/ScoreCard'
 import PremiumLogo from '@/components/PremiumLogo'
 import GraphDiffModal from '@/components/GraphDiffModal'
-import { Activity, GitMerge, FileCode, Users, Flame, LayoutDashboard, Settings, History, TestTube, Package, Sparkles, Network } from 'lucide-react'
+import ArchitectureModal from '@/components/ArchitectureModal'
+import { Activity, GitMerge, FileCode, Users, Flame, LayoutDashboard, Settings, History, TestTube, Package, Sparkles, Network, Code } from 'lucide-react'
 
 interface JobStatus {
   id: string
@@ -61,6 +62,7 @@ export default function DashboardPage() {
   const [showAiModal, setShowAiModal] = useState(false)
   const [showPredictModal, setShowPredictModal] = useState(false)
   const [showGraphModal, setShowGraphModal] = useState(false)
+  const [showArchModal, setShowArchModal] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
@@ -233,6 +235,13 @@ export default function DashboardPage() {
               <span>Graph<span className="hidden sm:inline"> Diff</span></span>
             </button>
             <button
+              onClick={() => setShowArchModal(true)}
+              className="border border-purple-500/50 text-purple-400 hover:bg-purple-500/10 rounded-lg py-1.5 sm:py-2 px-2 sm:px-4 text-[10px] sm:text-xs flex items-center gap-1 sm:gap-2 whitespace-nowrap transition-colors"
+            >
+              <PremiumLogo query="code architecture struct" fallbackIcon={<Code size={14} />} size={14} className="hidden sm:flex" /> 
+              <span>Architecture</span>
+            </button>
+            <button
               onClick={() => setShowAiModal(true)}
               className="neon-btn-pink py-1.5 sm:py-2 px-2 sm:px-4 text-[10px] sm:text-xs flex items-center gap-1 sm:gap-2 whitespace-nowrap"
             >
@@ -392,6 +401,9 @@ export default function DashboardPage() {
       )}
       {showGraphModal && (
         <GraphDiffModal repoId={repoId} commits={commits} onClose={() => setShowGraphModal(false)} />
+      )}
+      {showArchModal && (
+        <ArchitectureModal repoId={repoId} commitHash={commits[0]?.hash || ''} onClose={() => setShowArchModal(false)} />
       )}
     </div>
   )
