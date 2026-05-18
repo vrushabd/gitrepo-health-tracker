@@ -34,7 +34,7 @@ export const repoApi = {
   explain: (repoId: string) =>
     api.post(`/api/repos/${repoId}/explain`).then(r => r.data),
 
-  predict: (repoId: string, payload: {
+  predict: (repoId: string, payload: { prUrl: string } | {
     filesModified: string[];
     linesAdded: number;
     linesRemoved: number;

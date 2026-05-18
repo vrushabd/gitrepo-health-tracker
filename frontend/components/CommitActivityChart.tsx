@@ -39,7 +39,7 @@ export default function CommitActivityChart({ commits }: Props) {
     })
   }
 
-  const data = [...weekMap.entries()]
+  const data = Array.from(weekMap.entries())
     .slice(-12)
     .map(([date, v]) => ({ date, ...v }))
 

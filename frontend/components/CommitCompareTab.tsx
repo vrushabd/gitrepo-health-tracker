@@ -6,6 +6,17 @@ import { motion } from 'framer-motion'
 import { repoApi } from '@/lib/api'
 import KnowledgeGraphDiff from './KnowledgeGraphDiff'
 import { FilePlus, FileEdit, FileMinus, ShieldCheck } from 'lucide-react'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts'
+import PremiumLogo from './PremiumLogo'
 
 interface Props {
   repoId: string
@@ -47,6 +58,17 @@ export default function CommitCompareTab({ repoId, commits }: Props) {
     } finally {
       setLoading(false)
     }
+  }
+
+  const getChartData = () => {
+    if (!diffData) return []
+    return [
+      { name: 'Overall', from: diffData.fromHealth?.overallScore || 0, to: diffData.toHealth?.overallScore || 0 },
+      { name: 'Complexity', from: diffData.fromHealth?.complexityScore || 0, to: diffData.toHealth?.complexityScore || 0 },
+      { name: 'Tests', from: diffData.fromHealth?.testScore || 0, to: diffData.toHealth?.testScore || 0 },
+      { name: 'Churn', from: diffData.fromHealth?.churnScore || 0, to: diffData.toHealth?.churnScore || 0 },
+      { name: 'Deps', from: diffData.fromHealth?.depScore || 0, to: diffData.toHealth?.depScore || 0 },
+    ]
   }
 
   return (
@@ -172,6 +194,43 @@ export default function CommitCompareTab({ repoId, commits }: Props) {
                 <p className="text-pink-400 text-xs font-bold mb-1 flex items-center gap-1"><FileMinus size={12}/> Removed</p>
                 <p className="text-2xl font-bold text-white">{diffData.filesRemoved?.length || 0}</p>
               </div>
+            </div>
+          </div>
+
+          {/* HEALTH DIFFERENCE GRAPH */}
+          <div className="glass-card p-6 bg-[#0a0a0f] border border-cyan-500/20">
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-2">
+                  <PremiumLogo query="bar chart trend difference" fallbackIcon={<ShieldCheck size={20} />} size={20} />
+                  Health Difference Graph
+                </h3>
+                <p className="text-gray-400 text-sm">Side-by-side scores for each health dimension.</p>
+              </div>
+              <div className={`text-xs font-mono font-bold ${diffData.healthDelta < 0 ? 'text-pink-500' : 'text-green-400'}`}>
+                Overall delta: {diffData.healthDelta > 0 ? '+' : ''}{diffData.healthDelta.toFixed(1)}
+              </div>
+            </div>
+
+            <div className="h-64 mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={getChartData()} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid stroke="#1a2d4a" strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={{ stroke: '#1a2d4a' }} tickLine={false} />
+                  <YAxis domain={[0, 100]} tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={{ stroke: '#1a2d4a' }} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#0d0d14', borderColor: '#1a2d4a', fontSize: '12px', color: '#fff' }}
+                    itemStyle={{ color: '#fff' }}
+                    cursor={{ fill: '#ffffff0a' }}
+                  />
+                  <Legend 
+                    wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} 
+                    iconType="rect" 
+                  />
+                  <Bar dataKey="from" name={`${diffData.fromCommit.substring(0,7)} health`} fill="#00f5ff" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="to" name={`${diffData.toCommit.substring(0,7)} health`} fill="#ff2a7a" radius={[2, 2, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
 

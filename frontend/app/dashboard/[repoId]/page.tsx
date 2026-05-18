@@ -55,10 +55,14 @@ export default function DashboardPage() {
 
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
   const [healthData, setHealthData] = useState<HealthData | null>(null)
-  const [timeline, setTimeline] = useState<unknown[]>([])
-  const [hotspots, setHotspots] = useState<unknown[]>([])
-  const [contributors, setContributors] = useState<unknown[]>([])
-  const [commits, setCommits] = useState<unknown[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [timeline, setTimeline] = useState<any[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [hotspots, setHotspots] = useState<any[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [contributors, setContributors] = useState<any[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [commits, setCommits] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview')
   const [showAiModal, setShowAiModal] = useState(false)
   const [showPredictModal, setShowPredictModal] = useState(false)

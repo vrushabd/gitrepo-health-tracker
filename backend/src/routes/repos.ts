@@ -233,6 +233,8 @@ repoRouter.get('/:id/diff', async (req: Request, res: Response) => {
       ...diffResult,
       fromGraph,
       toGraph,
+      fromHealth: fromSnapshot,
+      toHealth: toSnapshot,
       complexityDelta,
       testDelta: (toSnapshot?.testScore || 0) - (fromSnapshot?.testScore || 0),
       depDelta: (toSnapshot?.depCount || 0) - (fromSnapshot?.depCount || 0),
