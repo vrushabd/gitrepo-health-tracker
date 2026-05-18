@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { repoApi } from '@/lib/api'
 import KnowledgeGraphDiff from './KnowledgeGraphDiff'
+import PremiumLogo from './PremiumLogo'
 
 interface Props {
   repoId: string
