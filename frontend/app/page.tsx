@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { repoApi } from '@/lib/api'
 import PremiumLogo from '@/components/PremiumLogo'
-import { Zap, Flame, Bot, Activity, Users, GitMerge, Link, Download, Settings, Heart, BarChart3, AlertTriangle, Search, TestTube, Package } from 'lucide-react'
+import { useTheme } from '@/components/ThemeProvider'
+import { Zap, Flame, Bot, Activity, Users, GitMerge, Link, Download, Settings, Heart, BarChart3, AlertTriangle, Search, TestTube, Package, Sun, Moon } from 'lucide-react'
 
 const FEATURES = [
   {
@@ -57,6 +58,7 @@ const ARCH_STEPS = [
 
 export default function LandingPage() {
   const router = useRouter()
+  const { theme, toggle: toggleTheme } = useTheme()
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -86,9 +88,12 @@ export default function LandingPage() {
             <PremiumLogo query="radar pulse wave" fallbackIcon={<Activity size={24} />} size={32} />
             <span className="font-bold text-xl neon-text tracking-tight">RepoPulse AI</span>
           </div>
-          <div className="hidden md:flex items-center gap-8 text-sm text-gray-400">
-            <a href="#features" className="hover:text-white transition-colors">Features</a>
-            <a href="#architecture" className="hover:text-white transition-colors">Architecture</a>
+          <div className="hidden md:flex items-center gap-6 text-sm">
+            <a href="#features" style={{ color: 'var(--text-muted)' }} className="hover:text-white transition-colors">Features</a>
+            <a href="#architecture" style={{ color: 'var(--text-muted)' }} className="hover:text-white transition-colors">Architecture</a>
+            <button onClick={toggleTheme} className="theme-toggle" title="Toggle theme">
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
             <a href="#analyze" className="neon-btn py-2 px-4 text-xs">
               Get Started
             </a>

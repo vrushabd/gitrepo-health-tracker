@@ -11,6 +11,10 @@ import { paramId } from '../lib/params';
 
 export const repoRouter = Router();
 
+// Helper: cast Express params/query to string safely
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const p = (v: any): string => (Array.isArray(v) ? v[0] : (typeof v === 'object' ? '' : v)) ?? '';
+
 const analyzeSchema = z.object({
   url: z.string().url().refine(
     url => /github\.com\/[\w.-]+\/[\w.-]+/.test(url),
@@ -127,7 +131,7 @@ repoRouter.get('/:id/timeline', async (req: Request, res: Response) => {
 repoRouter.get('/:id/hotspots', async (req: Request, res: Response) => {
   try {
     const id = paramId(req);
-    const limit = parseInt(req.query.limit as string || '20', 10);
+    const limit = parseInt(p(req.query.limit) || '20', 10);
 
     // Aggregate file metrics — highest hotspot scores
     const hotspots = await prisma.fileMetric.groupBy({
@@ -178,8 +182,8 @@ repoRouter.get('/:id/contributors', async (req: Request, res: Response) => {
 repoRouter.get('/:id/diff', async (req: Request, res: Response) => {
   try {
     const id = paramId(req);
-    const from = req.query.from as string;
-    const to = req.query.to as string;
+    const from = p(req.query.from);
+    const to = p(req.query.to);
 
     if (!from || !to) {
       return res.status(400).json({ error: 'from and to commit hashes required' });
@@ -252,7 +256,7 @@ repoRouter.get('/:id/diff', async (req: Request, res: Response) => {
 repoRouter.get('/:id/graph', async (req: Request, res: Response) => {
   try {
     const id = paramId(req);
-    const commitHash = req.query.commit as string | undefined;
+    const commitHash = p(req.query.commit) || undefined;
 
     const commitRec = commitHash
       ? await prisma.commit.findFirst({
@@ -407,8 +411,8 @@ repoRouter.post('/:id/predict', async (req: Request, res: Response) => {
 repoRouter.get('/:id/commits', async (req: Request, res: Response) => {
   try {
     const id = paramId(req);
-    const page = parseInt(req.query.page as string || '1', 10);
-    const limit = parseInt(req.query.limit as string || '50', 10);
+    const page = parseInt(p(req.query.page) || '1', 10);
+    const limit = parseInt(p(req.query.limit) || '50', 10);
 
     const [commits, total] = await Promise.all([
       prisma.commit.findMany({
