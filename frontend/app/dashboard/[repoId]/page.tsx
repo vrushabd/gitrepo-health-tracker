@@ -13,7 +13,8 @@ import AiExplainModal from '@/components/AiExplainModal'
 import PredictModal from '@/components/PredictModal'
 import ScoreCard from '@/components/ScoreCard'
 import PremiumLogo from '@/components/PremiumLogo'
-import { Activity, GitMerge, FileCode, Users, Flame, LayoutDashboard, Settings, History, TestTube, Package, Sparkles } from 'lucide-react'
+import GraphDiffModal from '@/components/GraphDiffModal'
+import { Activity, GitMerge, FileCode, Users, Flame, LayoutDashboard, Settings, History, TestTube, Package, Sparkles, Network } from 'lucide-react'
 
 interface JobStatus {
   id: string
@@ -59,6 +60,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview')
   const [showAiModal, setShowAiModal] = useState(false)
   const [showPredictModal, setShowPredictModal] = useState(false)
+  const [showGraphModal, setShowGraphModal] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
@@ -224,6 +226,13 @@ export default function DashboardPage() {
               <span>Predict<span className="hidden sm:inline"> Merge</span></span>
             </button>
             <button
+              onClick={() => setShowGraphModal(true)}
+              className="border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 rounded-lg py-1.5 sm:py-2 px-2 sm:px-4 text-[10px] sm:text-xs flex items-center gap-1 sm:gap-2 whitespace-nowrap transition-colors"
+            >
+              <PremiumLogo query="network graph node" fallbackIcon={<Network size={14} />} size={14} className="hidden sm:flex" /> 
+              <span>Graph<span className="hidden sm:inline"> Diff</span></span>
+            </button>
+            <button
               onClick={() => setShowAiModal(true)}
               className="neon-btn-pink py-1.5 sm:py-2 px-2 sm:px-4 text-[10px] sm:text-xs flex items-center gap-1 sm:gap-2 whitespace-nowrap"
             >
@@ -380,6 +389,9 @@ export default function DashboardPage() {
       )}
       {showPredictModal && (
         <PredictModal repoId={repoId} onClose={() => setShowPredictModal(false)} />
+      )}
+      {showGraphModal && (
+        <GraphDiffModal repoId={repoId} commits={commits} onClose={() => setShowGraphModal(false)} />
       )}
     </div>
   )

@@ -120,6 +120,15 @@ export async function runAnalysis(jobId: string, repositoryId: string, repoUrl: 
         prevTestRatio = Math.max(0, Math.min(100, prevTestRatio + testDelta));
         prevDepCount = newDepCount;
 
+        // Build Knowledge Graph
+        const simpleGit = (await import('simple-git')).default;
+        const git = simpleGit(repoDir);
+        await git.checkout(commit.hash);
+        
+        const { buildCommitGraph } = await import('./graphBuilder');
+        const graph = await buildCommitGraph(repoDir);
+        const graphData = JSON.stringify(graph);
+
         // Prepare commit record (will be inserted)
         commitBatch.push({
           repositoryId,
@@ -136,6 +145,7 @@ export async function runAnalysis(jobId: string, repositoryId: string, repoUrl: 
           testDelta,
           depDelta,
           churnDelta,
+          graphData,
         });
 
         // Snapshot
