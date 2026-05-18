@@ -14,14 +14,7 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow any localhost origin in development, or match FRONTEND_URL in production
-    if (!origin || /^http:\/\/localhost:\d+$/.test(origin) || origin === process.env.FRONTEND_URL) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: true, // Allow all origins so Vercel dynamic preview URLs work
   credentials: true,
 }));
 
