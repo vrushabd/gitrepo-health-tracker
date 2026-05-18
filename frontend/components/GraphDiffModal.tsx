@@ -64,14 +64,16 @@ export default function GraphDiffModal({ repoId, commits, onClose }: Props) {
         onClick={e => e.target === e.currentTarget && onClose()}
       >
         <motion.div
-          initial={{ scale: 0.95, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          className="glass-card p-8 max-w-xl w-full border border-cyan-500/30"
-          style={{ boxShadow: '0 0 40px rgba(6,182,212,0.2)' }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="glass-card p-6 w-full max-w-lg border border-cyan-500/30 bg-[#0a0a0a]"
         >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="font-bold text-white text-lg">Compare Code Graphs</h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <PremiumLogo query="network compare split" size={24} />
+              Commit Compare
+            </h2>
             <button onClick={onClose} className="text-gray-500 hover:text-white">✕</button>
           </div>
 
@@ -109,7 +111,7 @@ export default function GraphDiffModal({ repoId, commits, onClose }: Props) {
             disabled={loading}
             className="neon-btn w-full flex justify-center items-center"
           >
-            {loading ? 'Analyzing Structure...' : 'Generate Graph Diff'}
+            {loading ? 'Analyzing Structure...' : 'Compare Commits'}
           </button>
         </motion.div>
       </motion.div>

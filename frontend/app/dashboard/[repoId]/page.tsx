@@ -232,7 +232,7 @@ export default function DashboardPage() {
               className="border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 rounded-lg py-1.5 sm:py-2 px-2 sm:px-4 text-[10px] sm:text-xs flex items-center gap-1 sm:gap-2 whitespace-nowrap transition-colors"
             >
               <PremiumLogo query="network graph node" fallbackIcon={<Network size={14} />} size={14} className="hidden sm:flex" /> 
-              <span>Graph<span className="hidden sm:inline"> Diff</span></span>
+              <span>Commit<span className="hidden sm:inline"> Compare</span></span>
             </button>
             <button
               onClick={() => setShowArchModal(true)}

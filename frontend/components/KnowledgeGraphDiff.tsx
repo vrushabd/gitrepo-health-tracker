@@ -209,7 +209,7 @@ export default function KnowledgeGraphDiff({ fromGraph, toGraph, onClose }: Prop
       <div className="w-full h-full max-w-6xl max-h-[90vh] bg-[#0a0a0f] border border-gray-800 rounded-xl overflow-hidden flex flex-col">
         <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-[#0d0d14] flex-shrink-0">
           <div>
-            <h2 className="text-lg font-bold text-white">🧠 Knowledge Graph Diff</h2>
+            <h2 className="text-lg font-bold text-white">🧠 Commit Compare</h2>
             <p className="text-gray-500 text-xs mt-0.5">Structural architecture comparison between commits</p>
           </div>
           <div className="flex items-center gap-4 text-xs">
