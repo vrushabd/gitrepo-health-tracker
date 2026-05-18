@@ -24,22 +24,22 @@
   }
 
   [data-theme="light"] {
-    --bg:          #f0f4ff;
+    --bg:          #eef2fb;
     --bg-card:     #ffffff;
-    --bg-card2:    #f8faff;
-    --border:      #d1ddf5;
-    --border-2:    #b8ccee;
-    --text-primary:#0f172a;
-    --text-muted:  #64748b;
-    --text-subtle: #475569;
-    --neon:        #0284c7;
-    --pink:        #e11d6a;
-    --purple:      #7c3aed;
-    --green:       #059669;
-    --neon-glow:   rgba(2,132,199,0.15);
-    --pink-glow:   rgba(225,29,106,0.15);
-    --card-shadow: 0 4px 24px rgba(15,23,42,0.08);
-    --grid-color:  rgba(2,132,199,0.04);
+    --bg-card2:    #f5f8ff;
+    --border:      #c8d8f0;
+    --border-2:    #a8bedf;
+    --text-primary:#0d1b2e;
+    --text-muted:  #5a6b85;
+    --text-subtle: #3d5068;
+    --neon:        #0369a1;
+    --pink:        #c2185b;
+    --purple:      #6d28d9;
+    --green:       #047857;
+    --neon-glow:   rgba(3,105,161,0.12);
+    --pink-glow:   rgba(194,24,91,0.12);
+    --card-shadow: 0 2px 16px rgba(13,27,46,0.07), 0 1px 4px rgba(13,27,46,0.04);
+    --grid-color:  rgba(3,105,161,0.035);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -219,3 +219,47 @@
   .bg-themed-card2 { background: var(--bg-card2); }
   .border-themed { border-color: var(--border); }
 }
+
+/* ── LIGHT MODE OVERRIDES for hardcoded Tailwind dark classes ── */
+[data-theme="light"] {
+  /* Text */
+  .text-white  { color: var(--text-primary) !important; }
+  .text-gray-100, .text-gray-200, .text-gray-300 { color: var(--text-subtle) !important; }
+  .text-gray-400, .text-gray-500 { color: var(--text-muted) !important; }
+  .text-gray-600 { color: #7a8fa8 !important; }
+
+  /* Backgrounds */
+  .bg-\[\#050914\], .bg-\[\#0a0a0f\], .bg-\[\#0a1628\], .bg-\[\#0d0d14\], .bg-\[\#111\] {
+    background: var(--bg-card2) !important;
+  }
+  .bg-cyber-card { background: var(--bg-card) !important; }
+
+  /* Borders */
+  .border-gray-800, .border-cyber-border {
+    border-color: var(--border) !important;
+  }
+
+  /* Inputs and selects */
+  select, input, textarea {
+    background: var(--bg-card2) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary) !important;
+  }
+
+  /* Hover backgrounds */
+  .hover\:bg-white\/\[0\.02\]:hover { background: rgba(0,0,0,0.03) !important; }
+
+  /* Glass card light override */
+  .glass-card {
+    background: var(--bg-card) !important;
+    border-color: var(--border) !important;
+  }
+
+  /* Recharts chart colors for light mode */
+  .recharts-cartesian-grid line { stroke: var(--border) !important; }
+  .recharts-text { fill: var(--text-muted) !important; }
+
+  /* Score and stat numbers */
+  .neon-text { color: var(--neon) !important; text-shadow: none !important; }
+}
+
