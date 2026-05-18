@@ -16,7 +16,7 @@ export interface MetricsSummary {
 
 export async function explainHealthMetrics(metrics: MetricsSummary): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
 
     const prompt = `You are a senior engineering lead analyzing codebase health metrics. 
 Analyze these computed metrics and provide a concise 3-4 sentence engineering assessment.
@@ -51,7 +51,7 @@ export async function predictMergeImpact(changes: {
   currentHealthScore: number;
 }): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
 
     const prompt = `You are a senior code reviewer. Predict the health impact of this proposed change.
 
