@@ -11,6 +11,7 @@ import {
   calculateBusFactor,
 } from './healthScorer';
 import { getRepoMetrics } from './repoMetrics';
+import type { Prisma } from '@prisma/client';
 
 const BATCH_SIZE = 20;
 
@@ -53,9 +54,9 @@ export async function runAnalysis(jobId: string, repositoryId: string, repoUrl: 
     const orderedCommits = [...commits].reverse();
 
     // Batch insert arrays
-    const commitBatch: Parameters<typeof prisma.commit.createMany>[0]['data'] = [];
-    const fileMetricBatch: Parameters<typeof prisma.fileMetric.createMany>[0]['data'] = [];
-    const snapshotBatch: Parameters<typeof prisma.healthSnapshot.createMany>[0]['data'] = [];
+    const commitBatch: Prisma.CommitCreateManyInput[] = [];
+    const fileMetricBatch: Prisma.FileMetricCreateManyInput[] = [];
+    const snapshotBatch: Prisma.HealthSnapshotCreateManyInput[] = [];
 
     for (const commit of orderedCommits) {
       try {
@@ -266,9 +267,9 @@ export async function runAnalysis(jobId: string, repositoryId: string, repoUrl: 
 }
 
 async function flushBatches(
-  commits: Parameters<typeof prisma.commit.createMany>[0]['data'],
-  snapshots: Parameters<typeof prisma.healthSnapshot.createMany>[0]['data'],
-  fileMetrics: Parameters<typeof prisma.fileMetric.createMany>[0]['data']
+  commits: Prisma.CommitCreateManyInput[],
+  snapshots: Prisma.HealthSnapshotCreateManyInput[],
+  fileMetrics: Prisma.FileMetricCreateManyInput[]
 ) {
   // SQLite + Prisma does not support skipDuplicates in createMany.
   // Use individual upserts via Promise.allSettled to gracefully skip conflicts.
