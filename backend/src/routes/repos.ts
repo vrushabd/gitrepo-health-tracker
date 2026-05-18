@@ -7,6 +7,7 @@ import { getDiffBetweenCommits } from '../services/gitAnalyzer';
 import { explainHealthMetrics, predictMergeImpact } from '../lib/gemini';
 import { parsePrDiff } from '../lib/diffParser';
 import * as path from 'path';
+import { paramId } from '../lib/params';
 
 export const repoRouter = Router();
 
@@ -67,7 +68,7 @@ repoRouter.post('/analyze', async (req: Request, res: Response) => {
 // GET /api/repos/:id/health
 repoRouter.get('/:id/health', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = paramId(req);
 
     const [repo, latestSnapshot, job] = await Promise.all([
       prisma.repository.findUnique({ where: { id } }),
@@ -97,7 +98,7 @@ repoRouter.get('/:id/health', async (req: Request, res: Response) => {
 // GET /api/repos/:id/timeline
 repoRouter.get('/:id/timeline', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = paramId(req);
     const limit = parseInt(req.query.limit as string || '100', 10);
 
     const snapshots = await prisma.healthSnapshot.findMany({
@@ -125,7 +126,7 @@ repoRouter.get('/:id/timeline', async (req: Request, res: Response) => {
 // GET /api/repos/:id/hotspots
 repoRouter.get('/:id/hotspots', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = paramId(req);
     const limit = parseInt(req.query.limit as string || '20', 10);
 
     // Aggregate file metrics — highest hotspot scores
@@ -142,11 +143,11 @@ repoRouter.get('/:id/hotspots', async (req: Request, res: Response) => {
       hotspots: hotspots.map(h => ({
         filePath: h.filePath,
         language: h.language,
-        hotspotScore: h._max.hotspotScore || 0,
-        complexity: h._max.complexity || 0,
-        churnCount: h._sum.churnCount || 0,
-        linesAdded: h._sum.linesAdded || 0,
-        linesRemoved: h._sum.linesRemoved || 0,
+        hotspotScore: h._max?.hotspotScore || 0,
+        complexity: h._max?.complexity || 0,
+        churnCount: h._sum?.churnCount || 0,
+        linesAdded: h._sum?.linesAdded || 0,
+        linesRemoved: h._sum?.linesRemoved || 0,
       })),
     });
   } catch (err) {
@@ -158,7 +159,7 @@ repoRouter.get('/:id/hotspots', async (req: Request, res: Response) => {
 // GET /api/repos/:id/contributors
 repoRouter.get('/:id/contributors', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = paramId(req);
 
     const contributors = await prisma.contributorStat.findMany({
       where: { repositoryId: id },
@@ -176,7 +177,7 @@ repoRouter.get('/:id/contributors', async (req: Request, res: Response) => {
 // GET /api/repos/:id/diff
 repoRouter.get('/:id/diff', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = paramId(req);
     const from = req.query.from as string;
     const to = req.query.to as string;
 
@@ -247,23 +248,41 @@ repoRouter.get('/:id/diff', async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/repos/:id/graph
+// GET /api/repos/:id/graph — latest graph by default; optional ?commit=
 repoRouter.get('/:id/graph', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const commitHash = req.query.commit as string;
+    const id = paramId(req);
+    const commitHash = req.query.commit as string | undefined;
 
-    if (!commitHash) {
-      return res.status(400).json({ error: 'commit hash required' });
-    }
-
-    const commitRec = await prisma.commit.findFirst({
-      where: { repositoryId: id, hash: commitHash },
-      select: { graphData: true }
-    });
+    const commitRec = commitHash
+      ? await prisma.commit.findFirst({
+          where: { repositoryId: id, hash: commitHash },
+          select: { graphData: true, hash: true, committedAt: true, functionCount: true, classCount: true, interfaceCount: true, importCount: true, dependencyCount: true },
+        })
+      : await prisma.commit.findFirst({
+          where: { repositoryId: id, graphData: { not: null } },
+          orderBy: { committedAt: 'desc' },
+          select: { graphData: true, hash: true, committedAt: true, functionCount: true, classCount: true, interfaceCount: true, importCount: true, dependencyCount: true },
+        });
 
     if (commitRec?.graphData) {
-      return res.json(JSON.parse(commitRec.graphData));
+      const graph = JSON.parse(commitRec.graphData);
+      return res.json({
+        commitHash: commitRec.hash,
+        committedAt: commitRec.committedAt,
+        ...graph,
+        ingestionMetrics: {
+          functionCount: commitRec.functionCount,
+          classCount: commitRec.classCount,
+          interfaceCount: commitRec.interfaceCount,
+          importCount: commitRec.importCount,
+          dependencyCount: commitRec.dependencyCount,
+        },
+      });
+    }
+
+    if (!commitHash) {
+      return res.status(404).json({ error: 'No structural graph available yet' });
     }
 
     // Build on the fly
@@ -287,7 +306,7 @@ repoRouter.get('/:id/graph', async (req: Request, res: Response) => {
 // POST /api/repos/:id/explain
 repoRouter.post('/:id/explain', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = paramId(req);
 
     const [repo, latestSnapshot, hotspots, commitCount] = await Promise.all([
       prisma.repository.findUnique({ where: { id } }),
@@ -340,7 +359,7 @@ repoRouter.post('/:id/explain', async (req: Request, res: Response) => {
 // POST /api/repos/:id/predict
 repoRouter.post('/:id/predict', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = paramId(req);
     let { filesModified = [], linesAdded = 0, linesRemoved = 0, newDependencies = [] } = req.body;
     const { prUrl } = req.body;
 
@@ -387,7 +406,7 @@ repoRouter.post('/:id/predict', async (req: Request, res: Response) => {
 // GET /api/repos/:id/commits
 repoRouter.get('/:id/commits', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = paramId(req);
     const page = parseInt(req.query.page as string || '1', 10);
     const limit = parseInt(req.query.limit as string || '50', 10);
 
@@ -401,6 +420,7 @@ repoRouter.get('/:id/commits', async (req: Request, res: Response) => {
           hash: true,
           message: true,
           author: true,
+          authorEmail: true,
           committedAt: true,
           filesChanged: true,
           insertions: true,
@@ -408,6 +428,11 @@ repoRouter.get('/:id/commits', async (req: Request, res: Response) => {
           healthScore: true,
           complexityDelta: true,
           testDelta: true,
+          functionCount: true,
+          classCount: true,
+          interfaceCount: true,
+          importCount: true,
+          dependencyCount: true,
         },
       }),
       prisma.commit.count({ where: { repositoryId: id } }),

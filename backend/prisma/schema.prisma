@@ -65,6 +65,11 @@ model Commit {
   depDelta        Float    @default(0)
   churnDelta      Float    @default(0)
   graphData       String?
+  functionCount   Int      @default(0)
+  classCount      Int      @default(0)
+  interfaceCount  Int      @default(0)
+  importCount     Int      @default(0)
+  dependencyCount Int      @default(0)
   createdAt       DateTime @default(now())
 
   repository  Repository   @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
