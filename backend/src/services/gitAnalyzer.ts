@@ -66,7 +66,7 @@ export async function cloneRepository(repoUrl: string, repoId: string): Promise<
     logger.info(`Repo already cloned at ${repoDir}, pulling latest...`);
     const git = simpleGit(repoDir).env('GIT_TERMINAL_PROMPT', '0');
     try {
-      await git.fetch(['--all']);
+      await git.fetch(['--all', '--depth', String(MAX_COMMITS + 50)]);
       return repoDir;
     } catch (fetchErr) {
       logger.warn(`Failed to fetch in existing repo ${repoDir}, cleaning up and recloning...`, fetchErr);
