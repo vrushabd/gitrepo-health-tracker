@@ -151,9 +151,16 @@ export default function DashboardPage() {
             </span>
           </div>
 
-          <h2 className="text-xl font-bold mb-2">
-            {jobStatus?.status === 'PENDING' ? '⏳ Queued...' : '⚙️ Analyzing Repository'}
-          </h2>
+          <div className="flex justify-center items-center gap-2 mb-2">
+            {jobStatus?.status === 'PENDING' ? (
+              <PremiumLogo query="hourglass wait time" fallbackIcon={<History size={24} />} size={24} />
+            ) : (
+              <PremiumLogo query="settings gears mechanical spinning animate-spin" fallbackIcon={<Settings size={24} />} size={24} className="animate-spin" />
+            )}
+            <h2 className="text-xl font-bold">
+              {jobStatus?.status === 'PENDING' ? 'Queued...' : 'Analyzing Repository'}
+            </h2>
+          </div>
 
           {repo && (
             <p className="text-gray-400 text-sm mb-4 font-mono">
@@ -186,9 +193,9 @@ export default function DashboardPage() {
   if (jobStatus?.status === 'FAILED') {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="glass-card p-10 max-w-md w-full mx-4 text-center">
-          <div className="text-5xl mb-4">❌</div>
-          <h2 className="text-xl font-bold text-pink-400 mb-2">Analysis Failed</h2>
+        <div className="glass-card p-10 max-w-md w-full mx-4 text-center flex flex-col items-center">
+          <PremiumLogo query="error warning red cross alert" fallbackIcon={<Activity size={48} />} size={48} className="mb-4" />
+          <h2 className="text-xl font-bold text-red-400 mb-2">Analysis Failed</h2>
           <p className="text-gray-500 text-sm">{jobStatus.error || 'Unknown error occurred'}</p>
           <a href="/" className="neon-btn mt-6 inline-block text-sm">← Try Another Repo</a>
         </div>

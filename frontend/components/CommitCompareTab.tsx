@@ -146,15 +146,15 @@ export default function CommitCompareTab({ repoId, commits }: Props) {
             <div className="grid grid-cols-3 gap-4">
               <div className="bg-[#111] border border-gray-800 rounded-lg p-4">
                 <p className="text-green-400 text-xs font-bold mb-1 flex items-center gap-1"><FilePlus size={12}/> Added</p>
-                <p className="text-2xl font-bold text-white">{diffData.added.length}</p>
+                <p className="text-2xl font-bold text-white">{diffData.filesAdded?.length || 0}</p>
               </div>
               <div className="bg-[#111] border border-gray-800 rounded-lg p-4">
                 <p className="text-yellow-400 text-xs font-bold mb-1 flex items-center gap-1"><FileEdit size={12}/> Modified</p>
-                <p className="text-2xl font-bold text-white">{diffData.modified.length}</p>
+                <p className="text-2xl font-bold text-white">{diffData.filesModified?.length || 0}</p>
               </div>
               <div className="bg-[#111] border border-gray-800 rounded-lg p-4">
                 <p className="text-pink-400 text-xs font-bold mb-1 flex items-center gap-1"><FileMinus size={12}/> Removed</p>
-                <p className="text-2xl font-bold text-white">{diffData.removed.length}</p>
+                <p className="text-2xl font-bold text-white">{diffData.filesRemoved?.length || 0}</p>
               </div>
             </div>
           </div>
