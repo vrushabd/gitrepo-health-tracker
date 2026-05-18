@@ -177,7 +177,8 @@ repoRouter.get('/:id/contributors', async (req: Request, res: Response) => {
 repoRouter.get('/:id/diff', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { from, to } = req.query as { from: string; to: string };
+    const from = req.query.from as string;
+    const to = req.query.to as string;
 
     if (!from || !to) {
       return res.status(400).json({ error: 'from and to commit hashes required' });
@@ -186,19 +187,52 @@ repoRouter.get('/:id/diff', async (req: Request, res: Response) => {
     const REPOS_DIR = process.env.REPOS_DIR || '/tmp/repopulse-repos';
     const repoDir = path.join(REPOS_DIR, id);
 
-    const [diffResult, fromSnapshot, toSnapshot] = await Promise.all([
+    const [diffResult, fromSnapshot, toSnapshot, fromCommitRec, toCommitRec] = await Promise.all([
       getDiffBetweenCommits(repoDir, from, to),
       prisma.healthSnapshot.findFirst({ where: { repositoryId: id, commitHash: from } }),
       prisma.healthSnapshot.findFirst({ where: { repositoryId: id, commitHash: to } }),
+      prisma.commit.findFirst({ where: { repositoryId: id, hash: from }, select: { graphData: true } }),
+      prisma.commit.findFirst({ where: { repositoryId: id, hash: to }, select: { graphData: true } }),
     ]);
 
     const healthDelta = (toSnapshot?.overallScore || 0) - (fromSnapshot?.overallScore || 0);
     const complexityDelta = (toSnapshot?.complexityScore || 0) - (fromSnapshot?.complexityScore || 0);
 
+    // Build graph on-the-fly if not stored in DB (for existing commits analyzed before graph feature)
+    const { buildCommitGraph } = await import('../services/graphBuilder');
+    const simpleGitLib = (await import('simple-git')).default;
+    const git = simpleGitLib(repoDir);
+
+    let fromGraph = { nodes: [] as any[], edges: [] as any[] };
+    let toGraph = { nodes: [] as any[], edges: [] as any[] };
+
+    if (fromCommitRec?.graphData) {
+      fromGraph = JSON.parse(fromCommitRec.graphData);
+    } else {
+      try {
+        await git.checkout(from);
+        fromGraph = await buildCommitGraph(repoDir);
+      } catch (e) { logger.warn('Could not build fromGraph:', e); }
+    }
+
+    if (toCommitRec?.graphData) {
+      toGraph = JSON.parse(toCommitRec.graphData);
+    } else {
+      try {
+        await git.checkout(to);
+        toGraph = await buildCommitGraph(repoDir);
+      } catch (e) { logger.warn('Could not build toGraph:', e); }
+    }
+
+    // Restore HEAD
+    try { await git.checkout('HEAD'); } catch {}
+
     return res.json({
       fromCommit: from,
       toCommit: to,
       ...diffResult,
+      fromGraph,
+      toGraph,
       complexityDelta,
       testDelta: (toSnapshot?.testScore || 0) - (fromSnapshot?.testScore || 0),
       depDelta: (toSnapshot?.depCount || 0) - (fromSnapshot?.depCount || 0),

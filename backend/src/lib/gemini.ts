@@ -1,8 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { logger } from './logger';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-
 export interface MetricsSummary {
   overallScore: number;
   complexityDelta: number;
@@ -16,6 +14,7 @@ export interface MetricsSummary {
 
 export async function explainHealthMetrics(metrics: MetricsSummary): Promise<string> {
   try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
     const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
 
     const prompt = `You are a senior engineering lead analyzing codebase health metrics. 
@@ -51,6 +50,7 @@ export async function predictMergeImpact(changes: {
   currentHealthScore: number;
 }): Promise<string> {
   try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
     const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
 
     const prompt = `You are a senior code reviewer. Predict the health impact of this proposed change.

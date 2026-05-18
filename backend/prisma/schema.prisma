@@ -64,6 +64,7 @@ model Commit {
   testDelta       Float    @default(0)
   depDelta        Float    @default(0)
   churnDelta      Float    @default(0)
+  graphData       String?
   createdAt       DateTime @default(now())
 
   repository  Repository   @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
