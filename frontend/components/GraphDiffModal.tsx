@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { repoApi } from '@/lib/api'
 import KnowledgeGraphDiff from './KnowledgeGraphDiff'
@@ -8,13 +8,14 @@ import PremiumLogo from './PremiumLogo'
 
 interface Props {
   repoId: string
-  commits: any[]
+  commits: { hash: string; message: string }[]
   onClose: () => void
 }
 
 export default function GraphDiffModal({ repoId, commits, onClose }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [diffData, setDiffData] = useState<any>(null)
 
   const [fromCommit, setFromCommit] = useState(commits[1]?.hash || '')

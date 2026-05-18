@@ -1,20 +1,36 @@
 'use client'
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { repoApi } from '@/lib/api'
 import KnowledgeGraphDiff from './KnowledgeGraphDiff'
-import { FilePlus, FileEdit, FileMinus, ShieldCheck, AlertTriangle } from 'lucide-react'
+import { FilePlus, FileEdit, FileMinus, ShieldCheck } from 'lucide-react'
 
 interface Props {
   repoId: string
-  commits: any[]
+  commits: { hash: string; message: string }[]
 }
 
 export default function CommitCompareTab({ repoId, commits }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [diffData, setDiffData] = useState<any>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [diffData, setDiffData] = useState<{
+    fromCommit: string;
+    toCommit: string;
+    filesAdded: string[];
+    filesModified: string[];
+    filesRemoved: string[];
+    fromHealth: any;
+    toHealth: any;
+    healthDelta: number;
+    fromGraph: any;
+    toGraph: any;
+    added?: any[];
+    modified?: any[];
+    removed?: any[];
+  } | null>(null)
 
   const [fromCommit, setFromCommit] = useState(commits[1]?.hash || '')
   const [toCommit, setToCommit] = useState(commits[0]?.hash || '')

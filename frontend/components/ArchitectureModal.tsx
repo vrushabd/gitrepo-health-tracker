@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { repoApi } from '@/lib/api'
 import ArchitectureMap from './ArchitectureMap'
 
@@ -14,6 +13,7 @@ interface Props {
 export default function ArchitectureModal({ repoId, commitHash, onClose }: Props) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [graphData, setGraphData] = useState<any>(null)
 
   useEffect(() => {

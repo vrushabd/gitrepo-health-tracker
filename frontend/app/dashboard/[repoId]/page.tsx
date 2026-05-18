@@ -16,7 +16,7 @@ import ScoreCard from '@/components/ScoreCard'
 import PremiumLogo from '@/components/PremiumLogo'
 import GraphDiffModal from '@/components/GraphDiffModal'
 import ArchitectureModal from '@/components/ArchitectureModal'
-import { Activity, GitMerge, FileCode, Users, Flame, LayoutDashboard, Settings, History, TestTube, Package, Sparkles, Network, Code } from 'lucide-react'
+import { Activity, GitMerge, FileCode, Users, Flame, LayoutDashboard, Settings, History, TestTube, Package, Sparkles, Code } from 'lucide-react'
 
 interface JobStatus {
   id: string

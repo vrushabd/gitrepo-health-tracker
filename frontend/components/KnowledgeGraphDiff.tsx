@@ -37,7 +37,7 @@ const LINK_COLORS: Record<string, string> = {
   retained: 'rgba(59,130,246,0.3)',
 };
 
-export default function KnowledgeGraphDiff({ fromGraph, toGraph, onClose }: Props) {
+export default function KnowledgeGraphDiff({ fromGraph, toGraph, onClose, embedded }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animFrameRef = useRef<number>(0);
@@ -93,7 +93,7 @@ export default function KnowledgeGraphDiff({ fromGraph, toGraph, onClose }: Prop
     const ctx = canvas.getContext('2d')!;
 
     // Initialize node positions
-    const nodes = graphData.nodes.map((n, i) => ({
+    const nodes = graphData.nodes.map((n) => ({
       ...n,
       x: W / 2 + (Math.random() - 0.5) * W * 0.8,
       y: H / 2 + (Math.random() - 0.5) * H * 0.8,
