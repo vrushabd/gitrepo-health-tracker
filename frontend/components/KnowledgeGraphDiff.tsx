@@ -73,9 +73,9 @@ export default function KnowledgeGraphDiff({ fromGraph, toGraph, onClose, embedd
     });
 
     const nodeArr = Array.from(nodes.values());
-    const countAdded = nodeArr.filter(n => n.status === 'added').length;
-    const countRemoved = nodeArr.filter(n => n.status === 'removed').length;
-    const countRetained = nodeArr.filter(n => n.status === 'retained').length;
+    const countAdded = nodeArr.filter(n => n.status === 'added').length + edges.filter(e => e.status === 'added').length;
+    const countRemoved = nodeArr.filter(n => n.status === 'removed').length + edges.filter(e => e.status === 'removed').length;
+    const countRetained = nodeArr.filter(n => n.status === 'retained').length + edges.filter(e => e.status === 'retained').length;
     setStats({ added: countAdded, removed: countRemoved, retained: countRetained });
 
     return { nodes: nodeArr, edges };
