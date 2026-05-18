@@ -4,40 +4,42 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { repoApi } from '@/lib/api'
+import PremiumLogo from '@/components/PremiumLogo'
+import { Zap, Flame, Bot, Activity, Users, GitMerge, Link, Download, Settings, Heart, BarChart3, AlertTriangle, Search, TestTube, Package } from 'lucide-react'
 
 const FEATURES = [
   {
-    icon: '⚡',
+    icon: <PremiumLogo query="lightning fast speed" fallbackIcon={<Zap size={32} />} size={32} />,
     title: 'Incremental Analysis',
     desc: 'Efficiently processes 500+ commits via diff-based analysis. Never rescans the full codebase.',
     color: 'neon',
   },
   {
-    icon: '🔥',
+    icon: <PremiumLogo query="fire hotspot flame" fallbackIcon={<Flame size={32} />} size={32} />,
     title: 'Hotspot Detection',
     desc: 'Identifies high-risk files by combining complexity scores with churn frequency.',
     color: 'pink',
   },
   {
-    icon: '🤖',
+    icon: <PremiumLogo query="ai robot intelligence" fallbackIcon={<Bot size={32} />} size={32} />,
     title: 'AI-Powered Insights',
     desc: 'Gemini AI explains health degradation in concise engineering language using only computed metrics.',
     color: 'purple',
   },
   {
-    icon: '📊',
+    icon: <PremiumLogo query="trend line chart full" fallbackIcon={<Activity size={32} />} size={32} />,
     title: 'Health Timeline',
     desc: 'Visual trend charts tracking complexity, test coverage, churn, and dependency health over time.',
     color: 'green',
   },
   {
-    icon: '🚌',
+    icon: <PremiumLogo query="users team leaderboard bus" fallbackIcon={<Users size={32} />} size={32} />,
     title: 'Bus Factor Analysis',
     desc: 'Detect single points of failure — modules owned by only one contributor.',
     color: 'yellow',
   },
   {
-    icon: '🔮',
+    icon: <PremiumLogo query="magic crystal ball future" fallbackIcon={<GitMerge size={32} />} size={32} />,
     title: 'Pre-Merge Prediction',
     desc: 'Predict health impact of proposed changes before they land in your main branch.',
     color: 'orange',
@@ -45,12 +47,12 @@ const FEATURES = [
 ]
 
 const ARCH_STEPS = [
-  { label: 'GitHub URL', icon: '🔗', color: '#00f5ff' },
-  { label: 'Clone + Fetch', icon: '📥', color: '#8b5cf6' },
-  { label: 'Incremental Diffs', icon: '⚙️', color: '#00ff9f' },
-  { label: 'Health Engine', icon: '❤️', color: '#ff2d78' },
-  { label: 'AI Explanation', icon: '🤖', color: '#ffd700' },
-  { label: 'Dashboard', icon: '📊', color: '#00f5ff' },
+  { label: 'GitHub URL', icon: <PremiumLogo query="link chain" fallbackIcon={<Link size={24} />} size={24} />, color: '#00f5ff' },
+  { label: 'Clone + Fetch', icon: <PremiumLogo query="download inbox" fallbackIcon={<Download size={24} />} size={24} />, color: '#8b5cf6' },
+  { label: 'Incremental Diffs', icon: <PremiumLogo query="settings gears logic" fallbackIcon={<Settings size={24} />} size={24} />, color: '#00ff9f' },
+  { label: 'Health Engine', icon: <PremiumLogo query="heart beat health" fallbackIcon={<Heart size={24} />} size={24} />, color: '#ff2d78' },
+  { label: 'AI Explanation', icon: <PremiumLogo query="ai robot bot" fallbackIcon={<Bot size={24} />} size={24} />, color: '#ffd700' },
+  { label: 'Dashboard', icon: <PremiumLogo query="dashboard layout chart" fallbackIcon={<BarChart3 size={24} />} size={24} />, color: '#00f5ff' },
 ]
 
 export default function LandingPage() {
@@ -154,7 +156,11 @@ export default function LandingPage() {
                       </svg>
                       Analyzing...
                     </span>
-                  ) : '🔍 Analyze Repo'}
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <Search size={16} /> Analyze Repo
+                    </span>
+                  )}
                 </button>
               </form>
 
@@ -162,9 +168,9 @@ export default function LandingPage() {
                 <motion.p
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-3 text-pink-400 text-sm"
+                  className="mt-3 text-pink-400 text-sm flex items-center justify-center gap-2"
                 >
-                  ⚠️ {error}
+                  <AlertTriangle size={16} /> {error}
                 </motion.p>
               )}
 
@@ -213,12 +219,12 @@ export default function LandingPage() {
             </p>
             <div className="grid md:grid-cols-3 gap-6">
               {[
-                { icon: '📈', title: 'Complexity Creep', desc: 'Cyclomatic complexity grows 23% per quarter without visibility', color: 'text-pink-400' },
-                { icon: '🧪', title: 'Test Erosion', desc: 'Teams ship 40% fewer tests under deadline pressure', color: 'text-yellow-400' },
-                { icon: '📦', title: 'Dependency Rot', desc: 'Avg project has 47 outdated or vulnerable packages', color: 'text-purple-400' },
+                { icon: <PremiumLogo query="trend line complexity" fallbackIcon={<Activity size={32} />} size={32} />, title: 'Complexity Creep', desc: 'Cyclomatic complexity grows 23% per quarter without visibility', color: 'text-pink-400' },
+                { icon: <PremiumLogo query="test tube science lab" fallbackIcon={<TestTube size={32} />} size={32} />, title: 'Test Erosion', desc: 'Teams ship 40% fewer tests under deadline pressure', color: 'text-yellow-400' },
+                { icon: <PremiumLogo query="box package open box" fallbackIcon={<Package size={32} />} size={32} />, title: 'Dependency Rot', desc: 'Avg project has 47 outdated or vulnerable packages', color: 'text-purple-400' },
               ].map((p, i) => (
                 <div key={i} className="glass-card p-6 text-left">
-                  <div className="text-3xl mb-3">{p.icon}</div>
+                  <div className="mb-3">{p.icon}</div>
                   <div className={`font-bold text-lg mb-2 ${p.color}`}>{p.title}</div>
                   <div className="text-gray-500 text-sm">{p.desc}</div>
                 </div>
@@ -253,7 +259,7 @@ export default function LandingPage() {
                 transition={{ delay: i * 0.1 }}
                 className="glass-card p-6 hover:border-cyan-500/30 transition-all duration-300 group"
               >
-                <div className="text-3xl mb-4 group-hover:scale-110 transition-transform duration-300">{f.icon}</div>
+                <div className="mb-4 group-hover:scale-110 transition-transform duration-300 origin-left">{f.icon}</div>
                 <h3 className="font-bold text-lg mb-2 text-white">{f.title}</h3>
                 <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
               </motion.div>
@@ -301,12 +307,13 @@ export default function LandingPage() {
           <div className="mt-12 glass-card p-8">
             <div className="grid md:grid-cols-4 gap-6 text-center">
               {[
-                { tech: 'Next.js 14', role: 'Frontend', color: '#00f5ff' },
+                { tech: 'Next.js', role: 'Frontend', color: '#00f5ff' },
                 { tech: 'Express.js', role: 'Backend API', color: '#8b5cf6' },
                 { tech: 'PostgreSQL', role: 'Database', color: '#00ff9f' },
-                { tech: 'Gemini AI', role: 'Intelligence', color: '#ffd700' },
+                { tech: 'Google Gemini', role: 'Intelligence', color: '#ffd700' },
               ].map((t, i) => (
-                <div key={i}>
+                <div key={i} className="flex flex-col items-center">
+                  <PremiumLogo query={t.tech} size={48} className="mb-3 drop-shadow-md" />
                   <div className="font-bold text-lg" style={{ color: t.color }}>{t.tech}</div>
                   <div className="text-gray-500 text-sm mt-1">{t.role}</div>
                 </div>
@@ -330,8 +337,8 @@ export default function LandingPage() {
               <span className="neon-text text-glow-neon">repo health now.</span>
             </h2>
             <p className="text-gray-400 mb-10">No signup required. Just paste your GitHub URL.</p>
-            <a href="#analyze" className="neon-btn text-base px-10 py-4 inline-block">
-              🚀 Analyze a Repository
+            <a href="#analyze" className="neon-btn text-base px-10 py-4 inline-flex items-center gap-3">
+              <Zap size={20} /> Analyze a Repository
             </a>
           </motion.div>
         </div>

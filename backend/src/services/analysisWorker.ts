@@ -15,9 +15,9 @@ import {
 const BATCH_SIZE = 20;
 
 export async function runAnalysis(jobId: string, repositoryId: string, repoUrl: string) {
-  const repoDir = await cloneRepository(repoUrl, repositoryId);
-
   try {
+    const repoDir = await cloneRepository(repoUrl, repositoryId);
+
     // Update job status
     await prisma.analysisJob.update({
       where: { id: jobId },

@@ -133,4 +133,11 @@
       linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
     background-size: 60px 60px;
   }
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }

@@ -1,5 +1,8 @@
 'use client'
 
+import PremiumLogo from '@/components/PremiumLogo'
+import { Flame } from 'lucide-react'
+
 interface HotspotFile {
   filePath: string
   language: string
@@ -16,9 +19,17 @@ interface Props {
 }
 
 function HotspotBadge({ score }: { score: number }) {
-  if (score > 20) return <span className="text-red-400 text-base">🔥🔥🔥</span>
-  if (score > 10) return <span className="text-yellow-400 text-base">🔥🔥</span>
-  return <span className="text-green-400 text-base">🔥</span>
+  const getFlame = () => (
+    <PremiumLogo 
+      query="fire flame hotspot" 
+      fallbackIcon={<Flame size={16} className="text-inherit" />} 
+      size={16} 
+    />
+  )
+
+  if (score > 20) return <div className="flex gap-1 text-red-400">{getFlame()}{getFlame()}{getFlame()}</div>
+  if (score > 10) return <div className="flex gap-1 text-yellow-400">{getFlame()}{getFlame()}</div>
+  return <div className="flex gap-1 text-green-400">{getFlame()}</div>
 }
 
 function RiskBar({ score }: { score: number }) {

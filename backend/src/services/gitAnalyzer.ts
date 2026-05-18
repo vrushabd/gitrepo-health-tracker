@@ -64,12 +64,19 @@ export async function cloneRepository(repoUrl: string, repoId: string): Promise<
   try {
     await fs.access(repoDir);
     logger.info(`Repo already cloned at ${repoDir}, pulling latest...`);
-    const git = simpleGit(repoDir);
-    await git.fetch(['--all']);
-    return repoDir;
+    const git = simpleGit(repoDir).env('GIT_TERMINAL_PROMPT', '0');
+    try {
+      await git.fetch(['--all']);
+      return repoDir;
+    } catch (fetchErr) {
+      logger.warn(`Failed to fetch in existing repo ${repoDir}, cleaning up and recloning...`, fetchErr);
+      await fs.rm(repoDir, { recursive: true, force: true });
+      throw new Error('Force re-clone');
+    }
   } catch {
     logger.info(`Cloning ${repoUrl} to ${repoDir}`);
-    await simpleGit().clone(repoUrl, repoDir, ['--depth', String(MAX_COMMITS + 50)]);
+    const git = simpleGit().env('GIT_TERMINAL_PROMPT', '0');
+    await git.clone(repoUrl, repoDir, ['--depth', String(MAX_COMMITS + 50)]);
     return repoDir;
   }
 }
@@ -97,8 +104,8 @@ export async function getCommitHistory(repoDir: string): Promise<Array<{
   return log.all.map(c => ({
     hash: c.hash,
     message: c.message,
-    author: c.author_name,
-    authorEmail: c.author_email,
+    author: (c as any).author,
+    authorEmail: (c as any).authorEmail,
     date: c.date,
   }));
 }

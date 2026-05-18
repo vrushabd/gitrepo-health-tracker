@@ -12,6 +12,8 @@ import CommitActivityChart from '@/components/CommitActivityChart'
 import AiExplainModal from '@/components/AiExplainModal'
 import PredictModal from '@/components/PredictModal'
 import ScoreCard from '@/components/ScoreCard'
+import PremiumLogo from '@/components/PremiumLogo'
+import { Activity, GitMerge, FileCode, Users, Flame, LayoutDashboard, Settings, History, TestTube, Package, Sparkles } from 'lucide-react'
 
 interface JobStatus {
   id: string
@@ -189,42 +191,44 @@ export default function DashboardPage() {
     )
   }
 
-  const TABS: { key: ActiveTab; label: string; icon: string }[] = [
-    { key: 'overview', label: 'Overview', icon: '📊' },
-    { key: 'timeline', label: 'Timeline', icon: '📈' },
-    { key: 'hotspots', label: 'Hotspots', icon: '🔥' },
-    { key: 'contributors', label: 'Contributors', icon: '👥' },
-    { key: 'predict', label: 'Predict', icon: '🔮' },
+  const TABS: { key: ActiveTab; label: string; icon: React.ReactNode }[] = [
+    { key: 'overview', label: 'Overview', icon: <PremiumLogo query="overview chart graph" fallbackIcon={<LayoutDashboard size={18} />} size={18} className="mr-2" /> },
+    { key: 'timeline', label: 'Timeline', icon: <PremiumLogo query="timeline trend line" fallbackIcon={<Activity size={18} />} size={18} className="mr-2" /> },
+    { key: 'hotspots', label: 'Hotspots', icon: <PremiumLogo query="fire hotspot flame" fallbackIcon={<Flame size={18} />} size={18} className="mr-2" /> },
+    { key: 'contributors', label: 'Contributors', icon: <PremiumLogo query="users team people" fallbackIcon={<Users size={18} />} size={18} className="mr-2" /> },
+    { key: 'predict', label: 'Predict', icon: <PremiumLogo query="magic crystal ball" fallbackIcon={<GitMerge size={18} />} size={18} className="mr-2" /> },
   ]
 
   return (
     <div className="min-h-screen">
       {/* ── HEADER ── */}
       <header className="sticky top-0 z-40 glass-card border-0 border-b border-cyber-border/50">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <a href="/" className="text-gray-500 hover:text-white transition-colors text-sm">
-              ← Home
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink min-w-0">
+            <a href="/" className="text-gray-500 hover:text-white transition-colors text-xs sm:text-sm whitespace-nowrap">
+              ← <span className="hidden sm:inline">Home</span>
             </a>
-            <div className="w-px h-4 bg-cyber-border" />
-            <div>
-              <span className="neon-text font-bold text-sm">
+            <div className="w-px h-4 bg-cyber-border shrink-0" />
+            <div className="min-w-0 flex-1 truncate">
+              <span className="neon-text font-bold text-xs sm:text-sm block truncate">
                 {repo ? `${(repo as {owner:string}).owner}/${(repo as {name:string}).name}` : 'Repository Dashboard'}
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <button
               onClick={() => setShowPredictModal(true)}
-              className="neon-btn py-2 px-4 text-xs"
+              className="neon-btn py-1.5 sm:py-2 px-2 sm:px-4 text-[10px] sm:text-xs flex items-center gap-1 sm:gap-2 whitespace-nowrap"
             >
-              🔮 Predict Merge
+              <PremiumLogo query="magic crystal ball" fallbackIcon={<GitMerge size={14} />} size={14} className="hidden sm:flex" /> 
+              <span>Predict<span className="hidden sm:inline"> Merge</span></span>
             </button>
             <button
               onClick={() => setShowAiModal(true)}
-              className="neon-btn-pink py-2 px-4 text-xs"
+              className="neon-btn-pink py-1.5 sm:py-2 px-2 sm:px-4 text-[10px] sm:text-xs flex items-center gap-1 sm:gap-2 whitespace-nowrap"
             >
-              🤖 AI Explain
+              <PremiumLogo query="ai robot bot" fallbackIcon={<Sparkles size={14} />} size={14} className="hidden sm:flex" /> 
+              <span>AI<span className="hidden sm:inline"> Explain</span></span>
             </button>
           </div>
         </div>
@@ -251,19 +255,19 @@ export default function DashboardPage() {
           </div>
 
           {/* Sub-scores */}
-          <ScoreCard label="Complexity" score={health?.complexityScore ?? 0} icon="🧩" color="neon" />
-          <ScoreCard label="Test Health" score={health?.testScore ?? 0} icon="🧪" color="green" />
-          <ScoreCard label="Churn" score={health?.churnScore ?? 0} icon="🔄" color="yellow" />
-          <ScoreCard label="Dependencies" score={health?.depScore ?? 0} icon="📦" color="purple" />
+          <ScoreCard label="Complexity" score={health?.complexityScore ?? 0} icon={<PremiumLogo query="puzzle logic piece" fallbackIcon={<Settings size={24} />} size={24} />} color="neon" />
+          <ScoreCard label="Test Health" score={health?.testScore ?? 0} icon={<PremiumLogo query="test tube science lab" fallbackIcon={<TestTube size={24} />} size={24} />} color="green" />
+          <ScoreCard label="Churn" score={health?.churnScore ?? 0} icon={<PremiumLogo query="sync cycle refresh" fallbackIcon={<History size={24} />} size={24} />} color="yellow" />
+          <ScoreCard label="Dependencies" score={health?.depScore ?? 0} icon={<PremiumLogo query="box package open" fallbackIcon={<Package size={24} />} size={24} />} color="purple" />
         </motion.div>
 
         {/* Quick stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'Hotspot Files', value: health?.hotspotCount ?? '--', icon: '🔥' },
-            { label: 'Test Files', value: health?.testFiles ?? '--', icon: '🧪' },
-            { label: 'Code Files', value: health?.codeFiles ?? '--', icon: '📄' },
-            { label: 'Dependencies', value: health?.depCount ?? '--', icon: '📦' },
+            { label: 'Hotspot Files', value: health?.hotspotCount ?? '--', icon: <PremiumLogo query="fire flame hotspot" fallbackIcon={<Flame size={28} />} size={28} /> },
+            { label: 'Test Files', value: health?.testFiles ?? '--', icon: <PremiumLogo query="test tube science lab" fallbackIcon={<TestTube size={28} />} size={28} /> },
+            { label: 'Code Files', value: health?.codeFiles ?? '--', icon: <PremiumLogo query="file document page text" fallbackIcon={<FileCode size={28} />} size={28} /> },
+            { label: 'Dependencies', value: health?.depCount ?? '--', icon: <PremiumLogo query="box package open" fallbackIcon={<Package size={28} />} size={28} /> },
           ].map((s, i) => (
             <motion.div
               key={i}
@@ -272,7 +276,7 @@ export default function DashboardPage() {
               transition={{ delay: i * 0.1 }}
               className="stat-card"
             >
-              <div className="text-2xl mb-2">{s.icon}</div>
+              <div className="mb-2 flex items-center justify-start">{s.icon}</div>
               <div className="text-2xl font-bold text-white">{s.value}</div>
               <div className="text-gray-500 text-sm mt-1">{s.label}</div>
             </motion.div>
@@ -280,12 +284,12 @@ export default function DashboardPage() {
         </div>
 
         {/* ── TABS ── */}
-        <div className="flex gap-1 mb-6 glass-card p-1 w-fit">
+        <div className="flex gap-1 mb-6 glass-card p-1 w-full max-w-full overflow-x-auto hide-scrollbar whitespace-nowrap md:w-fit">
           {TABS.map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 flex items-center whitespace-nowrap ${
                 activeTab === tab.key
                   ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
                   : 'text-gray-500 hover:text-gray-300'
@@ -308,15 +312,21 @@ export default function DashboardPage() {
             {activeTab === 'overview' && (
               <div className="grid lg:grid-cols-2 gap-6">
                 <div className="glass-card p-6">
-                  <h3 className="font-bold mb-4 text-gray-300">📈 Health Score Trend</h3>
+                  <h3 className="font-bold mb-4 text-gray-300 flex items-center gap-2">
+                    <PremiumLogo query="trend line chart" fallbackIcon={<Activity size={24} />} size={24} /> Health Score Trend
+                  </h3>
                   <TimelineChart data={timeline} compact />
                 </div>
                 <div className="glass-card p-6">
-                  <h3 className="font-bold mb-4 text-gray-300">📊 Commit Activity</h3>
+                  <h3 className="font-bold mb-4 text-gray-300 flex items-center gap-2">
+                    <PremiumLogo query="bar chart activity" fallbackIcon={<Activity size={24} />} size={24} /> Commit Activity
+                  </h3>
                   <CommitActivityChart commits={commits} />
                 </div>
                 <div className="glass-card p-6 lg:col-span-2">
-                  <h3 className="font-bold mb-4 text-gray-300">🔥 Top Hotspot Files</h3>
+                  <h3 className="font-bold mb-4 text-gray-300 flex items-center gap-2">
+                    <PremiumLogo query="fire hotspot flame" fallbackIcon={<Flame size={24} />} size={24} /> Top Hotspot Files
+                  </h3>
                   <HotspotTable hotspots={hotspots.slice(0, 8)} compact />
                 </div>
               </div>
@@ -324,31 +334,39 @@ export default function DashboardPage() {
 
             {activeTab === 'timeline' && (
               <div className="glass-card p-6">
-                <h3 className="font-bold mb-6 text-gray-300 text-lg">📈 Full Health Timeline</h3>
+                <h3 className="font-bold mb-6 text-gray-300 text-lg flex items-center gap-2">
+                  <PremiumLogo query="trend line chart full" fallbackIcon={<Activity size={28} />} size={28} /> Full Health Timeline
+                </h3>
                 <TimelineChart data={timeline} />
               </div>
             )}
 
             {activeTab === 'hotspots' && (
               <div className="glass-card p-6">
-                <h3 className="font-bold mb-6 text-gray-300 text-lg">🔥 Hotspot Risk Map</h3>
+                <h3 className="font-bold mb-6 text-gray-300 text-lg flex items-center gap-2">
+                  <PremiumLogo query="fire hotspot map" fallbackIcon={<Flame size={28} />} size={28} /> Hotspot Risk Map
+                </h3>
                 <HotspotTable hotspots={hotspots} />
               </div>
             )}
 
             {activeTab === 'contributors' && (
               <div className="glass-card p-6">
-                <h3 className="font-bold mb-6 text-gray-300 text-lg">👥 Contributor Leaderboard &amp; Bus Factor</h3>
+                <h3 className="font-bold mb-6 text-gray-300 text-lg flex items-center gap-2">
+                  <PremiumLogo query="users team leaderboard" fallbackIcon={<Users size={28} />} size={28} /> Contributor Leaderboard &amp; Bus Factor
+                </h3>
                 <ContributorLeaderboard contributors={contributors} />
               </div>
             )}
 
             {activeTab === 'predict' && (
               <div className="glass-card p-8 max-w-2xl">
-                <h3 className="font-bold mb-2 text-gray-300 text-lg">🔮 Pre-Merge Health Prediction</h3>
+                <h3 className="font-bold mb-2 text-gray-300 text-lg flex items-center gap-2">
+                  <PremiumLogo query="magic crystal ball future" fallbackIcon={<GitMerge size={28} />} size={28} /> Pre-Merge Health Prediction
+                </h3>
                 <p className="text-gray-500 text-sm mb-6">Simulate a merge to predict its health impact before it lands.</p>
-                <button onClick={() => setShowPredictModal(true)} className="neon-btn">
-                  🔮 Open Prediction Tool
+                <button onClick={() => setShowPredictModal(true)} className="neon-btn flex items-center gap-2">
+                  <PremiumLogo query="magic crystal ball open" fallbackIcon={<GitMerge size={16} />} size={16} /> Open Prediction Tool
                 </button>
               </div>
             )}
