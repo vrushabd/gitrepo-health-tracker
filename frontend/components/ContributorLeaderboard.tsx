@@ -1,5 +1,8 @@
 'use client'
 
+import PremiumLogo from '@/components/PremiumLogo'
+import { Bus, AlertTriangle, Medal } from 'lucide-react'
+
 interface Contributor {
   id: string
   author: string
@@ -22,23 +25,26 @@ interface Props {
 }
 
 function BusFactorBadge({ factor }: { factor: number }) {
+  const BusIcon = () => <PremiumLogo query="bus travel transport" fallbackIcon={<Bus size={12} className="inline-block" />} size={12} className="inline-block mr-1" />
+  const AlertIcon = () => <PremiumLogo query="warning alert triangle" fallbackIcon={<AlertTriangle size={12} className="inline-block" />} size={12} className="inline-block ml-1" />
+
   if (factor === 1) {
     return (
-      <span className="px-2 py-0.5 rounded text-xs bg-red-500/10 text-red-400 border border-red-500/30">
-        🚌 Bus Factor: 1 ⚠️
+      <span className="flex items-center px-2 py-0.5 rounded text-xs bg-red-500/10 text-red-400 border border-red-500/30">
+        <BusIcon /> Bus Factor: 1 <AlertIcon />
       </span>
     )
   }
   if (factor <= 2) {
     return (
-      <span className="px-2 py-0.5 rounded text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/30">
-        🚌 Bus Factor: {factor}
+      <span className="flex items-center px-2 py-0.5 rounded text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/30">
+        <BusIcon /> Bus Factor: {factor}
       </span>
     )
   }
   return (
-    <span className="px-2 py-0.5 rounded text-xs bg-green-500/10 text-green-400 border border-green-500/30">
-      🚌 Bus Factor: {factor}
+    <span className="flex items-center px-2 py-0.5 rounded text-xs bg-green-500/10 text-green-400 border border-green-500/30">
+      <BusIcon /> Bus Factor: {factor}
     </span>
   )
 }
@@ -78,8 +84,11 @@ export default function ContributorLeaderboard({ contributors }: Props) {
           className="flex items-start gap-4 p-4 rounded-xl bg-white/[0.02] border border-cyber-border/30 hover:border-cyan-500/20 transition-all"
         >
           {/* Rank */}
-          <div className="w-6 text-center text-sm font-bold text-gray-600 mt-2">
-            {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
+          <div className="w-6 text-center text-sm font-bold text-gray-600 mt-2 flex justify-center">
+            {i === 0 ? <PremiumLogo query="gold medal first rank" fallbackIcon={<Medal size={16} className="text-yellow-400" />} size={16} /> :
+             i === 1 ? <PremiumLogo query="silver medal second rank" fallbackIcon={<Medal size={16} className="text-gray-300" />} size={16} /> :
+             i === 2 ? <PremiumLogo query="bronze medal third rank" fallbackIcon={<Medal size={16} className="text-amber-600" />} size={16} /> :
+             `#${i + 1}`}
           </div>
 
           <Avatar name={c.author} />

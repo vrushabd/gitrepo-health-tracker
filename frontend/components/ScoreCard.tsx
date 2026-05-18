@@ -3,7 +3,7 @@
 interface Props {
   label: string
   score: number
-  icon: string
+  icon: React.ReactNode
   color: 'neon' | 'green' | 'yellow' | 'purple' | 'pink'
 }
 
@@ -21,7 +21,7 @@ export default function ScoreCard({ label, score, icon, color }: Props) {
   return (
     <div className={`glass-card p-5 border ${c.border}`}>
       <div className="flex items-center justify-between mb-3">
-        <span className="text-lg">{icon}</span>
+        <span className="flex items-center justify-center">{icon}</span>
         <span className={`text-2xl font-black ${c.text}`}>{score}</span>
       </div>
       <div className="text-gray-500 text-xs mb-2">{label}</div>
