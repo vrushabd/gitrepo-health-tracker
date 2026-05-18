@@ -8,9 +8,9 @@ import {
 import {
   computeHealthScore,
   computeHotspotScore,
-  extractDependencyCount,
   calculateBusFactor,
 } from './healthScorer';
+import { getRepoMetrics } from './repoMetrics';
 
 const BATCH_SIZE = 20;
 
@@ -98,12 +98,14 @@ export async function runAnalysis(jobId: string, repositoryId: string, repoUrl: 
         filesChanged.forEach(f => contrib.filesModified.add(f));
         contributorMap.set(emailSafe, contrib);
 
-        // Check for package.json changes (dep tracking)
-        const hasDepChange = filesChanged.some(f =>
-          f.endsWith('package.json') && !f.includes('node_modules')
-        );
-        const depDeltaForCommit = hasDepChange ? extractDependencyCount('') : 0;
-        const newDepCount = prevDepCount + depDeltaForCommit;
+        // Check out commit early to analyze repo state
+        const simpleGit = (await import('simple-git')).default;
+        const git = simpleGit(repoDir);
+        await git.checkout(commit.hash);
+        
+        // Calculate true repository totals at this exact commit
+        const repoStats = await getRepoMetrics(repoDir);
+        const newDepCount = repoStats.depCount;
 
         // Compute health score
         const { scores, complexityDelta, testDelta, depDelta, churnDelta } = computeHealthScore({
@@ -121,10 +123,6 @@ export async function runAnalysis(jobId: string, repositoryId: string, repoUrl: 
         prevDepCount = newDepCount;
 
         // Build Knowledge Graph
-        const simpleGit = (await import('simple-git')).default;
-        const git = simpleGit(repoDir);
-        await git.checkout(commit.hash);
-        
         const { buildCommitGraph } = await import('./graphBuilder');
         const graph = await buildCommitGraph(repoDir);
         const graphData = JSON.stringify(graph);
@@ -158,9 +156,9 @@ export async function runAnalysis(jobId: string, repositoryId: string, repoUrl: 
           churnScore: scores.churn,
           depScore: scores.dependency,
           hotspotCount: fileMetrics.filter(f => computeHotspotScore(f.complexity, churnMap.get(f.filePath) || 0) > 5).length,
-          totalFiles: filesChanged.length,
-          testFiles: fileMetrics.filter(f => f.isTest).length,
-          codeFiles: fileMetrics.filter(f => !f.isTest).length,
+          totalFiles: repoStats.totalFiles,
+          testFiles: repoStats.testFiles,
+          codeFiles: repoStats.codeFiles,
           depCount: newDepCount,
           snapshotAt: new Date(commit.date),
         });

@@ -8,13 +8,15 @@ import HealthScoreRing from '@/components/HealthScoreRing'
 import TimelineChart from '@/components/TimelineChart'
 import HotspotTable from '@/components/HotspotTable'
 import ContributorLeaderboard from '@/components/ContributorLeaderboard'
+import CommitCompareTab from '@/components/CommitCompareTab'
 import CommitActivityChart from '@/components/CommitActivityChart'
 import AiExplainModal from '@/components/AiExplainModal'
 import PredictModal from '@/components/PredictModal'
 import ScoreCard from '@/components/ScoreCard'
 import PremiumLogo from '@/components/PremiumLogo'
 import GraphDiffModal from '@/components/GraphDiffModal'
-import { Activity, GitMerge, FileCode, Users, Flame, LayoutDashboard, Settings, History, TestTube, Package, Sparkles, Network } from 'lucide-react'
+import ArchitectureModal from '@/components/ArchitectureModal'
+import { Activity, GitMerge, FileCode, Users, Flame, LayoutDashboard, Settings, History, TestTube, Package, Sparkles, Code } from 'lucide-react'
 
 interface JobStatus {
   id: string
@@ -43,7 +45,7 @@ interface HealthData {
   jobStatus: string
 }
 
-type ActiveTab = 'overview' | 'timeline' | 'hotspots' | 'contributors' | 'predict'
+type ActiveTab = 'overview' | 'timeline' | 'hotspots' | 'contributors' | 'predict' | 'compare'
 
 export default function DashboardPage() {
   const params = useParams()
@@ -53,14 +55,19 @@ export default function DashboardPage() {
 
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null)
   const [healthData, setHealthData] = useState<HealthData | null>(null)
-  const [timeline, setTimeline] = useState<unknown[]>([])
-  const [hotspots, setHotspots] = useState<unknown[]>([])
-  const [contributors, setContributors] = useState<unknown[]>([])
-  const [commits, setCommits] = useState<unknown[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [timeline, setTimeline] = useState<any[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [hotspots, setHotspots] = useState<any[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [contributors, setContributors] = useState<any[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [commits, setCommits] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview')
   const [showAiModal, setShowAiModal] = useState(false)
   const [showPredictModal, setShowPredictModal] = useState(false)
   const [showGraphModal, setShowGraphModal] = useState(false)
+  const [showArchModal, setShowArchModal] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
@@ -148,9 +155,16 @@ export default function DashboardPage() {
             </span>
           </div>
 
-          <h2 className="text-xl font-bold mb-2">
-            {jobStatus?.status === 'PENDING' ? '⏳ Queued...' : '⚙️ Analyzing Repository'}
-          </h2>
+          <div className="flex justify-center items-center gap-2 mb-2">
+            {jobStatus?.status === 'PENDING' ? (
+              <PremiumLogo query="hourglass wait time" fallbackIcon={<History size={24} />} size={24} />
+            ) : (
+              <PremiumLogo query="settings gears mechanical spinning animate-spin" fallbackIcon={<Settings size={24} />} size={24} className="animate-spin" />
+            )}
+            <h2 className="text-xl font-bold">
+              {jobStatus?.status === 'PENDING' ? 'Queued...' : 'Analyzing Repository'}
+            </h2>
+          </div>
 
           {repo && (
             <p className="text-gray-400 text-sm mb-4 font-mono">
@@ -183,9 +197,9 @@ export default function DashboardPage() {
   if (jobStatus?.status === 'FAILED') {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="glass-card p-10 max-w-md w-full mx-4 text-center">
-          <div className="text-5xl mb-4">❌</div>
-          <h2 className="text-xl font-bold text-pink-400 mb-2">Analysis Failed</h2>
+        <div className="glass-card p-10 max-w-md w-full mx-4 text-center flex flex-col items-center">
+          <PremiumLogo query="error warning red cross alert" fallbackIcon={<Activity size={48} />} size={48} className="mb-4" />
+          <h2 className="text-xl font-bold text-red-400 mb-2">Analysis Failed</h2>
           <p className="text-gray-500 text-sm">{jobStatus.error || 'Unknown error occurred'}</p>
           <a href="/" className="neon-btn mt-6 inline-block text-sm">← Try Another Repo</a>
         </div>
@@ -196,6 +210,7 @@ export default function DashboardPage() {
   const TABS: { key: ActiveTab; label: string; icon: React.ReactNode }[] = [
     { key: 'overview', label: 'Overview', icon: <PremiumLogo query="overview chart graph" fallbackIcon={<LayoutDashboard size={18} />} size={18} className="mr-2" /> },
     { key: 'timeline', label: 'Timeline', icon: <PremiumLogo query="timeline trend line" fallbackIcon={<Activity size={18} />} size={18} className="mr-2" /> },
+    { key: 'compare', label: 'Compare', icon: <PremiumLogo query="network compare split" fallbackIcon={<GitMerge size={18} />} size={18} className="mr-2" /> },
     { key: 'hotspots', label: 'Hotspots', icon: <PremiumLogo query="fire hotspot flame" fallbackIcon={<Flame size={18} />} size={18} className="mr-2" /> },
     { key: 'contributors', label: 'Contributors', icon: <PremiumLogo query="users team people" fallbackIcon={<Users size={18} />} size={18} className="mr-2" /> },
     { key: 'predict', label: 'Predict', icon: <PremiumLogo query="magic crystal ball" fallbackIcon={<GitMerge size={18} />} size={18} className="mr-2" /> },
@@ -226,11 +241,11 @@ export default function DashboardPage() {
               <span>Predict<span className="hidden sm:inline"> Merge</span></span>
             </button>
             <button
-              onClick={() => setShowGraphModal(true)}
-              className="border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 rounded-lg py-1.5 sm:py-2 px-2 sm:px-4 text-[10px] sm:text-xs flex items-center gap-1 sm:gap-2 whitespace-nowrap transition-colors"
+              onClick={() => setShowArchModal(true)}
+              className="border border-purple-500/50 text-purple-400 hover:bg-purple-500/10 rounded-lg py-1.5 sm:py-2 px-2 sm:px-4 text-[10px] sm:text-xs flex items-center gap-1 sm:gap-2 whitespace-nowrap transition-colors"
             >
-              <PremiumLogo query="network graph node" fallbackIcon={<Network size={14} />} size={14} className="hidden sm:flex" /> 
-              <span>Graph<span className="hidden sm:inline"> Diff</span></span>
+              <PremiumLogo query="code architecture struct" fallbackIcon={<Code size={14} />} size={14} className="hidden sm:flex" /> 
+              <span>Architecture</span>
             </button>
             <button
               onClick={() => setShowAiModal(true)}
@@ -368,6 +383,10 @@ export default function DashboardPage() {
               </div>
             )}
 
+            {activeTab === 'compare' && (
+              <CommitCompareTab repoId={repoId} commits={commits} />
+            )}
+
             {activeTab === 'predict' && (
               <div className="glass-card p-8 max-w-2xl">
                 <h3 className="font-bold mb-2 text-gray-300 text-lg flex items-center gap-2">
@@ -392,6 +411,9 @@ export default function DashboardPage() {
       )}
       {showGraphModal && (
         <GraphDiffModal repoId={repoId} commits={commits} onClose={() => setShowGraphModal(false)} />
+      )}
+      {showArchModal && (
+        <ArchitectureModal repoId={repoId} commitHash={commits[0]?.hash || ''} onClose={() => setShowArchModal(false)} />
       )}
     </div>
   )

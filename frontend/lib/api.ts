@@ -28,10 +28,13 @@ export const repoApi = {
   getDiff: (repoId: string, from: string, to: string) =>
     api.get(`/api/repos/${repoId}/diff`, { params: { from, to } }).then(r => r.data),
 
+  getGraph: (repoId: string, commitHash: string) =>
+    api.get(`/api/repos/${repoId}/graph`, { params: { commit: commitHash } }).then(r => r.data),
+
   explain: (repoId: string) =>
     api.post(`/api/repos/${repoId}/explain`).then(r => r.data),
 
-  predict: (repoId: string, payload: {
+  predict: (repoId: string, payload: { prUrl: string } | {
     filesModified: string[];
     linesAdded: number;
     linesRemoved: number;

@@ -233,6 +233,8 @@ repoRouter.get('/:id/diff', async (req: Request, res: Response) => {
       ...diffResult,
       fromGraph,
       toGraph,
+      fromHealth: fromSnapshot,
+      toHealth: toSnapshot,
       complexityDelta,
       testDelta: (toSnapshot?.testScore || 0) - (fromSnapshot?.testScore || 0),
       depDelta: (toSnapshot?.depCount || 0) - (fromSnapshot?.depCount || 0),
@@ -242,6 +244,43 @@ repoRouter.get('/:id/diff', async (req: Request, res: Response) => {
   } catch (err) {
     logger.error('Diff error:', err);
     return res.status(500).json({ error: 'Failed to compute diff' });
+  }
+});
+
+// GET /api/repos/:id/graph
+repoRouter.get('/:id/graph', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const commitHash = req.query.commit as string;
+
+    if (!commitHash) {
+      return res.status(400).json({ error: 'commit hash required' });
+    }
+
+    const commitRec = await prisma.commit.findFirst({
+      where: { repositoryId: id, hash: commitHash },
+      select: { graphData: true }
+    });
+
+    if (commitRec?.graphData) {
+      return res.json(JSON.parse(commitRec.graphData));
+    }
+
+    // Build on the fly
+    const REPOS_DIR = process.env.REPOS_DIR || '/tmp/repopulse-repos';
+    const repoDir = path.join(REPOS_DIR, id);
+    const { buildCommitGraph } = await import('../services/graphBuilder');
+    const simpleGitLib = (await import('simple-git')).default;
+    const git = simpleGitLib(repoDir);
+
+    await git.checkout(commitHash);
+    const graph = await buildCommitGraph(repoDir);
+    try { await git.checkout('HEAD'); } catch {}
+
+    return res.json(graph);
+  } catch (err) {
+    logger.error('Graph fetch error:', err);
+    return res.status(500).json({ error: 'Failed to fetch graph' });
   }
 });
 

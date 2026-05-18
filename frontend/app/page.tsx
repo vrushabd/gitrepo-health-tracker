@@ -80,13 +80,11 @@ export default function LandingPage() {
   return (
     <main className="min-h-screen">
       {/* ── NAV ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-0 border-b border-cyber-border/50">
+      <nav className="fixed top-0 left-0 right-0 z-50 glass-card border-0 border-b border-cyber-border/50 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-sm font-bold">
-              RP
-            </div>
-            <span className="font-bold text-lg neon-text">RepoPulse AI</span>
+            <PremiumLogo query="radar pulse wave" fallbackIcon={<Activity size={24} />} size={32} />
+            <span className="font-bold text-xl neon-text tracking-tight">RepoPulse AI</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-gray-400">
             <a href="#features" className="hover:text-white transition-colors">Features</a>
@@ -99,10 +97,21 @@ export default function LandingPage() {
       </nav>
 
       {/* ── HERO ── */}
-      <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
-        {/* Glow blobs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+      <section id="hero" className="relative min-h-screen flex items-center justify-center pt-16">
+        {/* Background Dot Pattern */}
+        <div className="absolute inset-0 bg-[radial-gradient(rgba(0,245,255,0.07)_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
+        
+        {/* Animated Glow blobs */}
+        <motion.div 
+          animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }} 
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-cyan-500/20 rounded-full blur-[120px] pointer-events-none" 
+        />
+        <motion.div 
+          animate={{ scale: [1, 1.5, 1], opacity: [0.1, 0.25, 0.1] }} 
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[150px] pointer-events-none" 
+        />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-pink-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
@@ -116,17 +125,17 @@ export default function LandingPage() {
               AI-Powered · Incremental · Real-time
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-5">
-              <span className="text-white">Track your codebase</span>
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-tight mb-5 tracking-tight">
+              <span className="text-white drop-shadow-lg">Track your codebase</span>
               <br />
               <span className="neon-text text-glow-neon">health like</span>
               <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400 animate-pulse drop-shadow-[0_0_15px_rgba(236,72,153,0.3)]">
                 engineering leaders.
               </span>
             </h1>
 
-            <p className="text-base md:text-lg text-gray-400 max-w-2xl mx-auto mb-8">
+            <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 font-medium">
               RepoPulse AI analyzes public GitHub repositories across 500+ commits,
               detecting complexity hotspots, test degradation, and dependency risks —
               then explains it all with Gemini AI.
@@ -185,17 +194,24 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
-            className="mt-12 grid grid-cols-3 md:grid-cols-3 gap-6 max-w-2xl mx-auto"
+            className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto"
           >
             {[
-              { value: '500+', label: 'Commits Analyzed' },
-              { value: '6', label: 'Health Metrics' },
-              { value: 'AI', label: 'Gemini Powered' },
+              { value: '500+', label: 'Commits Analyzed', color: 'from-cyan-400 to-blue-500' },
+              { value: '6', label: 'Health Metrics', color: 'from-purple-400 to-pink-500' },
+              { value: 'AI', label: 'Gemini Powered', color: 'from-yellow-400 to-orange-500' },
             ].map((s, i) => (
-              <div key={i} className="glass-card p-4 text-center">
-                <div className="text-2xl font-black neon-text">{s.value}</div>
-                <div className="text-gray-500 text-xs mt-1">{s.label}</div>
-              </div>
+              <motion.div 
+                whileHover={{ y: -5 }}
+                key={i} 
+                className="glass-card p-6 text-center relative overflow-hidden group border border-gray-800 hover:border-cyan-500/30 transition-all"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${s.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+                <div className={`text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r ${s.color} drop-shadow-md`}>
+                  {s.value}
+                </div>
+                <div className="text-gray-400 font-semibold text-sm mt-2 tracking-wide uppercase">{s.label}</div>
+              </motion.div>
             ))}
           </motion.div>
         </div>

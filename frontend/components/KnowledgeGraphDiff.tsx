@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState, useMemo } from 'react';
+import PremiumLogo from './PremiumLogo';
+import { GitMerge } from 'lucide-react';
 
 interface GraphNode {
   id: string;
@@ -20,6 +22,7 @@ interface Props {
   fromGraph: { nodes: GraphNode[]; edges: GraphEdge[] };
   toGraph: { nodes: GraphNode[]; edges: GraphEdge[] };
   onClose: () => void;
+  embedded?: boolean;
 }
 
 const NODE_COLORS: Record<string, string> = {
@@ -34,7 +37,7 @@ const LINK_COLORS: Record<string, string> = {
   retained: 'rgba(59,130,246,0.3)',
 };
 
-export default function KnowledgeGraphDiff({ fromGraph, toGraph, onClose }: Props) {
+export default function KnowledgeGraphDiff({ fromGraph, toGraph, onClose, embedded }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animFrameRef = useRef<number>(0);
@@ -70,9 +73,9 @@ export default function KnowledgeGraphDiff({ fromGraph, toGraph, onClose }: Prop
     });
 
     const nodeArr = Array.from(nodes.values());
-    const countAdded = nodeArr.filter(n => n.status === 'added').length;
-    const countRemoved = nodeArr.filter(n => n.status === 'removed').length;
-    const countRetained = nodeArr.filter(n => n.status === 'retained').length;
+    const countAdded = nodeArr.filter(n => n.status === 'added').length + edges.filter(e => e.status === 'added').length;
+    const countRemoved = nodeArr.filter(n => n.status === 'removed').length + edges.filter(e => e.status === 'removed').length;
+    const countRetained = nodeArr.filter(n => n.status === 'retained').length + edges.filter(e => e.status === 'retained').length;
     setStats({ added: countAdded, removed: countRemoved, retained: countRetained });
 
     return { nodes: nodeArr, edges };
@@ -90,7 +93,7 @@ export default function KnowledgeGraphDiff({ fromGraph, toGraph, onClose }: Prop
     const ctx = canvas.getContext('2d')!;
 
     // Initialize node positions
-    const nodes = graphData.nodes.map((n, i) => ({
+    const nodes = graphData.nodes.map((n) => ({
       ...n,
       x: W / 2 + (Math.random() - 0.5) * W * 0.8,
       y: H / 2 + (Math.random() - 0.5) * H * 0.8,
@@ -204,12 +207,15 @@ export default function KnowledgeGraphDiff({ fromGraph, toGraph, onClose }: Prop
     return () => cancelAnimationFrame(animFrameRef.current);
   }, [graphData]);
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
-      <div className="w-full h-full max-w-6xl max-h-[90vh] bg-[#0a0a0f] border border-gray-800 rounded-xl overflow-hidden flex flex-col">
+  const content = (
+    <div className={`w-full h-full flex flex-col ${!embedded ? 'max-w-6xl max-h-[90vh] bg-[#0a0a0f] border border-gray-800 rounded-xl overflow-hidden' : ''}`}>
+      {!embedded && (
         <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-[#0d0d14] flex-shrink-0">
           <div>
-            <h2 className="text-lg font-bold text-white">🧠 Knowledge Graph Diff</h2>
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <PremiumLogo query="network compare split" fallbackIcon={<GitMerge size={20} />} size={20} />
+              Commit Compare
+            </h2>
             <p className="text-gray-500 text-xs mt-0.5">Structural architecture comparison between commits</p>
           </div>
           <div className="flex items-center gap-4 text-xs">
@@ -219,15 +225,32 @@ export default function KnowledgeGraphDiff({ fromGraph, toGraph, onClose }: Prop
             <button onClick={onClose} className="ml-4 px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded text-gray-300">Close</button>
           </div>
         </div>
-        <div ref={containerRef} className="flex-1 relative">
-          <canvas ref={canvasRef} className="w-full h-full" />
-          {graphData.nodes.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-sm">
-              No graph data available for this commit range.
-            </div>
-          )}
+      )}
+      {embedded && (
+        <div className="absolute top-4 right-4 z-10 bg-black/60 backdrop-blur-sm p-3 rounded-lg border border-gray-800 flex items-center gap-4 text-xs shadow-lg">
+          <span className="flex items-center gap-1.5 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> {stats.added} Added</span>
+          <span className="flex items-center gap-1.5 text-red-400"><span className="w-2 h-2 rounded-full bg-red-400 inline-block"></span> {stats.removed} Removed</span>
+          <span className="flex items-center gap-1.5 text-blue-400"><span className="w-2 h-2 rounded-full bg-blue-400 inline-block"></span> {stats.retained} Retained</span>
         </div>
+      )}
+      <div ref={containerRef} className={`flex-1 relative ${embedded ? 'bg-[#050508]' : ''}`}>
+        <canvas ref={canvasRef} className="w-full h-full" />
+        {graphData.nodes.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-sm">
+            No graph data available for this commit range.
+          </div>
+        )}
       </div>
+    </div>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
+      {content}
     </div>
   );
 }
