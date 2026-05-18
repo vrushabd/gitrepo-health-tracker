@@ -22,6 +22,7 @@ interface Props {
   fromGraph: { nodes: GraphNode[]; edges: GraphEdge[] };
   toGraph: { nodes: GraphNode[]; edges: GraphEdge[] };
   onClose: () => void;
+  embedded?: boolean;
 }
 
 const NODE_COLORS: Record<string, string> = {
@@ -206,9 +207,9 @@ export default function KnowledgeGraphDiff({ fromGraph, toGraph, onClose }: Prop
     return () => cancelAnimationFrame(animFrameRef.current);
   }, [graphData]);
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
-      <div className="w-full h-full max-w-6xl max-h-[90vh] bg-[#0a0a0f] border border-gray-800 rounded-xl overflow-hidden flex flex-col">
+  const content = (
+    <div className={`w-full h-full flex flex-col ${!embedded ? 'max-w-6xl max-h-[90vh] bg-[#0a0a0f] border border-gray-800 rounded-xl overflow-hidden' : ''}`}>
+      {!embedded && (
         <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-[#0d0d14] flex-shrink-0">
           <div>
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -224,15 +225,32 @@ export default function KnowledgeGraphDiff({ fromGraph, toGraph, onClose }: Prop
             <button onClick={onClose} className="ml-4 px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded text-gray-300">Close</button>
           </div>
         </div>
-        <div ref={containerRef} className="flex-1 relative">
-          <canvas ref={canvasRef} className="w-full h-full" />
-          {graphData.nodes.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-sm">
-              No graph data available for this commit range.
-            </div>
-          )}
+      )}
+      {embedded && (
+        <div className="absolute top-4 right-4 z-10 bg-black/60 backdrop-blur-sm p-3 rounded-lg border border-gray-800 flex items-center gap-4 text-xs shadow-lg">
+          <span className="flex items-center gap-1.5 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> {stats.added} Added</span>
+          <span className="flex items-center gap-1.5 text-red-400"><span className="w-2 h-2 rounded-full bg-red-400 inline-block"></span> {stats.removed} Removed</span>
+          <span className="flex items-center gap-1.5 text-blue-400"><span className="w-2 h-2 rounded-full bg-blue-400 inline-block"></span> {stats.retained} Retained</span>
         </div>
+      )}
+      <div ref={containerRef} className={`flex-1 relative ${embedded ? 'bg-[#050508]' : ''}`}>
+        <canvas ref={canvasRef} className="w-full h-full" />
+        {graphData.nodes.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-sm">
+            No graph data available for this commit range.
+          </div>
+        )}
       </div>
+    </div>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
+      {content}
     </div>
   );
 }

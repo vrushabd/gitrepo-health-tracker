@@ -8,6 +8,7 @@ import HealthScoreRing from '@/components/HealthScoreRing'
 import TimelineChart from '@/components/TimelineChart'
 import HotspotTable from '@/components/HotspotTable'
 import ContributorLeaderboard from '@/components/ContributorLeaderboard'
+import CommitCompareTab from '@/components/CommitCompareTab'
 import CommitActivityChart from '@/components/CommitActivityChart'
 import AiExplainModal from '@/components/AiExplainModal'
 import PredictModal from '@/components/PredictModal'
@@ -44,7 +45,7 @@ interface HealthData {
   jobStatus: string
 }
 
-type ActiveTab = 'overview' | 'timeline' | 'hotspots' | 'contributors' | 'predict'
+type ActiveTab = 'overview' | 'timeline' | 'hotspots' | 'contributors' | 'predict' | 'compare'
 
 export default function DashboardPage() {
   const params = useParams()
@@ -198,6 +199,7 @@ export default function DashboardPage() {
   const TABS: { key: ActiveTab; label: string; icon: React.ReactNode }[] = [
     { key: 'overview', label: 'Overview', icon: <PremiumLogo query="overview chart graph" fallbackIcon={<LayoutDashboard size={18} />} size={18} className="mr-2" /> },
     { key: 'timeline', label: 'Timeline', icon: <PremiumLogo query="timeline trend line" fallbackIcon={<Activity size={18} />} size={18} className="mr-2" /> },
+    { key: 'compare', label: 'Compare', icon: <PremiumLogo query="network compare split" fallbackIcon={<GitMerge size={18} />} size={18} className="mr-2" /> },
     { key: 'hotspots', label: 'Hotspots', icon: <PremiumLogo query="fire hotspot flame" fallbackIcon={<Flame size={18} />} size={18} className="mr-2" /> },
     { key: 'contributors', label: 'Contributors', icon: <PremiumLogo query="users team people" fallbackIcon={<Users size={18} />} size={18} className="mr-2" /> },
     { key: 'predict', label: 'Predict', icon: <PremiumLogo query="magic crystal ball" fallbackIcon={<GitMerge size={18} />} size={18} className="mr-2" /> },
@@ -226,13 +228,6 @@ export default function DashboardPage() {
             >
               <PremiumLogo query="magic crystal ball" fallbackIcon={<GitMerge size={14} />} size={14} className="hidden sm:flex" /> 
               <span>Predict<span className="hidden sm:inline"> Merge</span></span>
-            </button>
-            <button
-              onClick={() => setShowGraphModal(true)}
-              className="border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 rounded-lg py-1.5 sm:py-2 px-2 sm:px-4 text-[10px] sm:text-xs flex items-center gap-1 sm:gap-2 whitespace-nowrap transition-colors"
-            >
-              <PremiumLogo query="network graph node" fallbackIcon={<Network size={14} />} size={14} className="hidden sm:flex" /> 
-              <span>Commit<span className="hidden sm:inline"> Compare</span></span>
             </button>
             <button
               onClick={() => setShowArchModal(true)}
@@ -375,6 +370,10 @@ export default function DashboardPage() {
                 </h3>
                 <ContributorLeaderboard contributors={contributors} />
               </div>
+            )}
+
+            {activeTab === 'compare' && (
+              <CommitCompareTab repoId={repoId} commits={commits} />
             )}
 
             {activeTab === 'predict' && (
