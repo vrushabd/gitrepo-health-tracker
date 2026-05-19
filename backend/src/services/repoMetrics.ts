@@ -33,12 +33,27 @@ export async function getRepoMetrics(repoDir: string) {
 
   let depCount = 0;
 
-  // JS/TS
-  try {
-    const pkg = JSON.parse(await fs.readFile(path.join(repoDir, 'package.json'), 'utf-8'));
-    depCount += Object.keys(pkg.dependencies || {}).length;
-    depCount += Object.keys(pkg.devDependencies || {}).length;
-  } catch {}
+  // Recursively find all package.json files (handles monorepos)
+  async function findPackageJsons(dir: string, depth = 0): Promise<void> {
+    if (depth > 3) return; // Don't go too deep
+    try {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'dist' || entry.name === 'build') continue;
+        if (entry.isFile() && entry.name === 'package.json') {
+          try {
+            const pkg = JSON.parse(await fs.readFile(path.join(dir, 'package.json'), 'utf-8'));
+            depCount += Object.keys(pkg.dependencies || {}).length;
+            depCount += Object.keys(pkg.devDependencies || {}).length;
+          } catch {}
+        } else if (entry.isDirectory() && depth < 3) {
+          await findPackageJsons(path.join(dir, entry.name), depth + 1);
+        }
+      }
+    } catch {}
+  }
+
+  await findPackageJsons(repoDir);
 
   // Python
   try {

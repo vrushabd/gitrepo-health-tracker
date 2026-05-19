@@ -74,7 +74,7 @@ repoRouter.get('/:id/health', async (req: Request, res: Response) => {
   try {
     const id = paramId(req);
 
-    const [repo, latestSnapshot, job] = await Promise.all([
+    const [repo, latestSnapshot, job, latestCommit] = await Promise.all([
       prisma.repository.findUnique({ where: { id } }),
       prisma.healthSnapshot.findFirst({
         where: { repositoryId: id },
@@ -84,12 +84,17 @@ repoRouter.get('/:id/health', async (req: Request, res: Response) => {
         where: { repositoryId: id },
         orderBy: { createdAt: 'desc' },
       }),
+      prisma.commit.findFirst({
+        where: { repositoryId: id },
+        orderBy: { committedAt: 'desc' },
+        select: { dependencyCount: true },
+      }),
     ]);
 
     if (!repo) return res.status(404).json({ error: 'Repository not found' });
 
     // Compute live stats from FileMetric for accurate dashboard cards
-    const [liveHotspotCount, liveTestFiles, liveTotalFiles, liveDepCount] = await Promise.all([
+    const [liveHotspotCount, liveTestFiles, liveTotalFiles] = await Promise.all([
       prisma.fileMetric.count({
         where: { repositoryId: id, hotspotScore: { gt: 5 }, isTest: false },
       }),
@@ -99,9 +104,10 @@ repoRouter.get('/:id/health', async (req: Request, res: Response) => {
       prisma.fileMetric.count({
         where: { repositoryId: id, isTest: false },
       }),
-      // Get the latest depCount from most recent snapshot
-      latestSnapshot?.depCount ?? 0,
     ]);
+
+    // Use snapshot depCount as the best available source
+    const liveDepCount = latestSnapshot?.depCount ?? latestCommit?.dependencyCount ?? 0;
 
     // Merge live stats into snapshot data
     const enrichedHealth = latestSnapshot
@@ -111,7 +117,7 @@ repoRouter.get('/:id/health', async (req: Request, res: Response) => {
           testFiles: liveTestFiles,
           codeFiles: liveTotalFiles,
           totalFiles: liveTestFiles + liveTotalFiles,
-          depCount: typeof liveDepCount === 'number' ? liveDepCount : latestSnapshot.depCount,
+          depCount: liveDepCount,
         }
       : null;
 
