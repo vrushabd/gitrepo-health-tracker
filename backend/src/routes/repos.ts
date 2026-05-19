@@ -88,9 +88,36 @@ repoRouter.get('/:id/health', async (req: Request, res: Response) => {
 
     if (!repo) return res.status(404).json({ error: 'Repository not found' });
 
+    // Compute live stats from FileMetric for accurate dashboard cards
+    const [liveHotspotCount, liveTestFiles, liveTotalFiles, liveDepCount] = await Promise.all([
+      prisma.fileMetric.count({
+        where: { repositoryId: id, hotspotScore: { gt: 5 }, isTest: false },
+      }),
+      prisma.fileMetric.count({
+        where: { repositoryId: id, isTest: true },
+      }),
+      prisma.fileMetric.count({
+        where: { repositoryId: id, isTest: false },
+      }),
+      // Get the latest depCount from most recent snapshot
+      latestSnapshot?.depCount ?? 0,
+    ]);
+
+    // Merge live stats into snapshot data
+    const enrichedHealth = latestSnapshot
+      ? {
+          ...latestSnapshot,
+          hotspotCount: liveHotspotCount,
+          testFiles: liveTestFiles,
+          codeFiles: liveTotalFiles,
+          totalFiles: liveTestFiles + liveTotalFiles,
+          depCount: typeof liveDepCount === 'number' ? liveDepCount : latestSnapshot.depCount,
+        }
+      : null;
+
     return res.json({
       repo,
-      health: latestSnapshot,
+      health: enrichedHealth,
       jobStatus: job?.status || 'UNKNOWN',
     });
   } catch (err) {
