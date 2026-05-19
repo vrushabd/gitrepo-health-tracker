@@ -1,12 +1,14 @@
 import { FileMetricInput, HealthScoreBreakdown } from '../types';
 
 interface ScoringContext {
-  fileMetrics: FileMetricInput[];
+  totalComplexity: number;
   prevComplexity: number;
+  testFiles: number;
+  codeFiles: number;
   prevTestRatio: number;
+  depCount: number;
   prevDepCount: number;
   churnMap: Map<string, number>;
-  depCount: number;
 }
 
 export function computeHealthScore(ctx: ScoringContext): {
@@ -16,19 +18,16 @@ export function computeHealthScore(ctx: ScoringContext): {
   depDelta: number;
   churnDelta: number;
 } {
-  const { fileMetrics, prevComplexity, prevTestRatio, prevDepCount, churnMap, depCount } = ctx;
+  const { totalComplexity, prevComplexity, testFiles, codeFiles, prevTestRatio, depCount, prevDepCount, churnMap } = ctx;
 
   // ─── Complexity Score ─────────────────────────────────────────────
-  const currentComplexity = fileMetrics.reduce((sum, f) => sum + f.complexity, 0);
-  const complexityDelta = currentComplexity - prevComplexity;
+  const complexityDelta = totalComplexity - prevComplexity;
 
   // Higher complexity = lower score. Normalize 0-100
-  const complexityScore = Math.max(0, Math.min(100, 100 - Math.log1p(currentComplexity) * 5));
+  const complexityScore = Math.max(0, Math.min(100, 100 - Math.log1p(totalComplexity) * 5));
 
   // ─── Test Health Score ────────────────────────────────────────────
-  const codeFiles = fileMetrics.filter(f => !f.isTest).length;
-  const testFiles = fileMetrics.filter(f => f.isTest).length;
-  const testRatio = codeFiles > 0 ? (testFiles / (codeFiles + testFiles)) * 100 : prevTestRatio;
+  const testRatio = (codeFiles + testFiles) > 0 ? (testFiles / (codeFiles + testFiles)) * 100 : 0;
   const testDelta = testRatio - prevTestRatio;
   const testScore = Math.min(100, testRatio * 2); // 50% test ratio = 100 score
 
@@ -44,8 +43,8 @@ export function computeHealthScore(ctx: ScoringContext): {
 
   // ─── Dependency Score ─────────────────────────────────────────────
   const depDelta = depCount - prevDepCount;
-  // Growing deps = risk. Base score penalizes rapid dep growth
-  const depScore = Math.max(0, Math.min(100, 100 - Math.max(0, depDelta) * 2));
+  // Penalize a high total number of dependencies
+  const depScore = Math.max(0, Math.min(100, 100 - Math.log1p(depCount) * 10));
 
   // ─── Overall Weighted Score ───────────────────────────────────────
   const overall = Math.round(

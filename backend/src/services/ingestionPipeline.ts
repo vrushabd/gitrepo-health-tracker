@@ -152,18 +152,30 @@ export async function runIngestion(
         const repoStats = await getRepoMetrics(repoDir);
         const newDepCount = repoStats.depCount;
 
+        for (const fm of fileMetrics) {
+          fileComplexityMap.set(fm.filePath, fm.complexity);
+        }
+
+        let totalComplexity = 0;
+        for (const comp of fileComplexityMap.values()) {
+          totalComplexity += comp;
+        }
+
         const { scores, complexityDelta, testDelta, depDelta, churnDelta } =
           computeHealthScore({
-            fileMetrics,
+            totalComplexity,
             prevComplexity,
+            testFiles: repoStats.testFiles,
+            codeFiles: repoStats.codeFiles,
             prevTestRatio,
             prevDepCount,
             churnMap,
             depCount: newDepCount,
           });
 
-        prevComplexity = Math.max(0, prevComplexity + complexityDelta);
-        prevTestRatio = Math.max(0, Math.min(100, prevTestRatio + testDelta));
+        prevComplexity = totalComplexity;
+        const testRatio = (repoStats.codeFiles + repoStats.testFiles) > 0 ? (repoStats.testFiles / (repoStats.codeFiles + repoStats.testFiles)) * 100 : 0;
+        prevTestRatio = testRatio;
         prevDepCount = newDepCount;
 
         const m = graph.metrics;
@@ -191,9 +203,7 @@ export async function runIngestion(
           dependencyCount: m.dependencyCount,
         });
 
-        for (const fm of fileMetrics) {
-          fileComplexityMap.set(fm.filePath, fm.complexity);
-        }
+
 
         let totalHotspots = 0;
         for (const [fp, comp] of fileComplexityMap.entries()) {
