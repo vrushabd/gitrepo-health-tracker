@@ -93,16 +93,20 @@ repoRouter.get('/:id/health', async (req: Request, res: Response) => {
 
     if (!repo) return res.status(404).json({ error: 'Repository not found' });
 
-    // Compute live stats from FileMetric for accurate dashboard cards
-    const [liveHotspotCount, liveTestFiles, liveTotalFiles] = await Promise.all([
-      prisma.fileMetric.count({
-        where: { repositoryId: id, hotspotScore: { gt: 5 }, isTest: false },
+    // Compute live stats using UNIQUE file paths (FileMetric has one row per file per commit)
+    const [uniqueCodeFiles, uniqueTestFiles, uniqueHotspotFiles] = await Promise.all([
+      prisma.fileMetric.groupBy({
+        by: ['filePath'],
+        where: { repositoryId: id, isTest: false },
       }),
-      prisma.fileMetric.count({
+      prisma.fileMetric.groupBy({
+        by: ['filePath'],
         where: { repositoryId: id, isTest: true },
       }),
-      prisma.fileMetric.count({
+      prisma.fileMetric.groupBy({
+        by: ['filePath'],
         where: { repositoryId: id, isTest: false },
+        having: { hotspotScore: { _max: { gt: 5 } } },
       }),
     ]);
 
@@ -113,10 +117,10 @@ repoRouter.get('/:id/health', async (req: Request, res: Response) => {
     const enrichedHealth = latestSnapshot
       ? {
           ...latestSnapshot,
-          hotspotCount: liveHotspotCount,
-          testFiles: liveTestFiles,
-          codeFiles: liveTotalFiles,
-          totalFiles: liveTestFiles + liveTotalFiles,
+          hotspotCount: uniqueHotspotFiles.length,
+          testFiles: uniqueTestFiles.length,
+          codeFiles: uniqueCodeFiles.length,
+          totalFiles: uniqueTestFiles.length + uniqueCodeFiles.length,
           depCount: liveDepCount,
         }
       : null;
