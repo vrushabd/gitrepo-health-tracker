@@ -15,7 +15,7 @@ import {
   calculateBusFactor,
 } from './healthScorer';
 
-const BATCH_SIZE = 20;
+const BATCH_SIZE = 50;
 
 export interface IngestionResult {
   repositoryId: string;
@@ -85,17 +85,27 @@ export async function runIngestion(
     const fileMetricBatch: Record<string, unknown>[] = [];
     const snapshotBatch: Record<string, unknown>[] = [];
 
+    // ── Optimization 1: Pre-fetch all existing hashes to avoid N DB queries ──
+    const existingHashSet = new Set(
+      (await prisma.commit.findMany({
+        where: { repositoryId },
+        select: { hash: true },
+      })).map(c => c.hash)
+    );
+
     const simpleGit = (await import('simple-git')).default;
     const git = simpleGit(repoDir);
 
+    // ── Optimization 2: Only build graph for the most recent unprocessed commit ──
+    const lastNewCommitHash = [...orderedCommits].reverse().find(c => !existingHashSet.has(c.hash))?.hash;
+
+    // ── Optimization 3: Cache repoStats, refresh every 50 commits or on dep-file change ──
+    let repoStats = await getRepoMetrics(repoDir);
+    let repoStatsCounter = 0;
+
     for (const commit of orderedCommits) {
       try {
-        const existing = await prisma.commit.findUnique({
-          where: { repositoryId_hash: { repositoryId, hash: commit.hash } },
-          select: { id: true, graphData: true },
-        });
-
-        if (existing) {
+        if (existingHashSet.has(commit.hash)) {
           processedCount++;
           continue;
         }
@@ -132,24 +142,40 @@ export async function runIngestion(
         filesChanged.forEach(f => contrib.filesModified.add(f));
         contributorMap.set(emailSafe, contrib);
 
-        await git.checkout(commit.hash);
+        // Only checkout + build graph for the LAST new commit (avoids N disk rewrites)
+        const shouldBuildGraph = commit.hash === lastNewCommitHash;
+        let graphData: string | null = null;
+        const graphMetrics = { functionCount: 0, classCount: 0, interfaceCount: 0, importCount: 0, dependencyCount: 0 };
 
-        if (isFirstProcessedCommit) {
-          await graphEngine.bootstrapFromRepo();
+        if (shouldBuildGraph) {
+          await git.checkout(commit.hash);
+          if (isFirstProcessedCommit) {
+            await graphEngine.bootstrapFromRepo();
+          } else {
+            const changed = [...new Set([...added, ...modified])];
+            await graphEngine.applyCommitDelta(changed, deleted);
+          }
           isFirstProcessedCommit = false;
-        } else {
-          const changed = [...new Set([...added, ...modified])];
-          await graphEngine.applyCommitDelta(changed, deleted);
+          const graph = graphEngine.snapshot();
+          graphData = JSON.stringify({ nodes: graph.nodes, edges: graph.edges, metrics: graph.metrics });
+          graphMetrics.functionCount = graph.metrics.functionCount;
+          graphMetrics.classCount = graph.metrics.classCount;
+          graphMetrics.interfaceCount = graph.metrics.interfaceCount;
+          graphMetrics.importCount = graph.metrics.importCount;
+          graphMetrics.dependencyCount = graph.metrics.dependencyCount;
+          // restore head after checkout
+          try { await git.checkout('HEAD'); } catch {}
         }
 
-        const graph = graphEngine.snapshot();
-        const graphData = JSON.stringify({
-          nodes: graph.nodes,
-          edges: graph.edges,
-          metrics: graph.metrics,
-        });
-
-        const repoStats = await getRepoMetrics(repoDir);
+        // Throttle repoMetrics: refresh every 50 commits or when a dep file changes
+        const depFileChanged = filesChanged.some(f =>
+          f.includes('package.json') || f.includes('requirements.txt') ||
+          f.includes('pom.xml') || f.includes('build.gradle') || f.includes('go.mod')
+        );
+        repoStatsCounter++;
+        if (repoStatsCounter % 50 === 0 || depFileChanged) {
+          repoStats = await getRepoMetrics(repoDir);
+        }
         const newDepCount = repoStats.depCount;
 
         for (const fm of fileMetrics) {
@@ -178,7 +204,7 @@ export async function runIngestion(
         prevTestRatio = testRatio;
         prevDepCount = newDepCount;
 
-        const m = graph.metrics;
+
 
         commitBatch.push({
           repositoryId,
@@ -196,11 +222,11 @@ export async function runIngestion(
           depDelta,
           churnDelta,
           graphData,
-          functionCount: m.functionCount,
-          classCount: m.classCount,
-          interfaceCount: m.interfaceCount,
-          importCount: m.importCount,
-          dependencyCount: m.dependencyCount,
+          functionCount: graphMetrics.functionCount,
+          classCount: graphMetrics.classCount,
+          interfaceCount: graphMetrics.interfaceCount,
+          importCount: graphMetrics.importCount,
+          dependencyCount: graphMetrics.dependencyCount,
         });
 
 
