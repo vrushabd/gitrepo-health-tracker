@@ -42,7 +42,7 @@ export default function ArchitectureModal({ repoId, commitHash, onClose }: Props
             </svg>
           </div>
           <p className="text-cyan-400 font-bold mb-2">Ingesting Architecture...</p>
-          <p className="text-gray-500 text-xs">Walking AST for {commitHash.substring(0, 7)}</p>
+          <p className="text-gray-500 text-xs">Walking AST for {commitHash ? commitHash.substring(0, 7) : 'latest commit'}</p>
         </div>
       </div>
     )

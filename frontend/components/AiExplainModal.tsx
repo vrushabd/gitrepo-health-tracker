@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { repoApi } from '@/lib/api'
+import { Brain, Sparkles } from 'lucide-react'
 
 interface Props {
   repoId: string
@@ -45,8 +46,8 @@ export default function AiExplainModal({ repoId, onClose }: Props) {
         >
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-xl">
-                🤖
+              <div className="w-10 h-10 rounded-lg bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-pink-400">
+                <Brain size={22} />
               </div>
               <div>
                 <h2 className="font-bold text-white text-lg">AI Health Explanation</h2>
@@ -68,8 +69,8 @@ export default function AiExplainModal({ repoId, onClose }: Props) {
                 <br />
                 <span className="text-gray-600 text-xs mt-1 block">No source code is sent — only computed metrics.</span>
               </p>
-              <button onClick={handleExplain} className="neon-btn-pink">
-                🤖 Generate AI Explanation
+              <button onClick={handleExplain} className="neon-btn-pink flex items-center gap-2">
+                <Sparkles size={16} /> Generate AI Explanation
               </button>
             </div>
           )}
