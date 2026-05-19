@@ -69,6 +69,7 @@ export async function runIngestion(
         filesModified: Set<string>;
       }
     >();
+    const fileComplexityMap = new Map<string, number>();
 
     let prevComplexity = 0;
     let prevTestRatio = 0;
@@ -190,6 +191,17 @@ export async function runIngestion(
           dependencyCount: m.dependencyCount,
         });
 
+        for (const fm of fileMetrics) {
+          fileComplexityMap.set(fm.filePath, fm.complexity);
+        }
+
+        let totalHotspots = 0;
+        for (const [fp, comp] of fileComplexityMap.entries()) {
+          if (computeHotspotScore(comp, churnMap.get(fp) || 0) > 5) {
+            totalHotspots++;
+          }
+        }
+
         snapshotBatch.push({
           repositoryId,
           commitHash: commit.hash,
@@ -198,9 +210,7 @@ export async function runIngestion(
           testScore: scores.testHealth,
           churnScore: scores.churn,
           depScore: scores.dependency,
-          hotspotCount: fileMetrics.filter(
-            f => computeHotspotScore(f.complexity, churnMap.get(f.filePath) || 0) > 5
-          ).length,
+          hotspotCount: totalHotspots,
           totalFiles: repoStats.totalFiles,
           testFiles: repoStats.testFiles,
           codeFiles: repoStats.codeFiles,
