@@ -412,7 +412,7 @@ export default function DashboardPage() {
         <GraphDiffModal repoId={repoId} commits={commits} onClose={() => setShowGraphModal(false)} />
       )}
       {showArchModal && (
-        <ArchitectureModal repoId={repoId} commitHash={commits[0]?.hash || ''} onClose={() => setShowArchModal(false)} />
+        <ArchitectureModal repoId={repoId} onClose={() => setShowArchModal(false)} />
       )}
     </div>
   )

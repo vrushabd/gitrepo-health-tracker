@@ -6,7 +6,7 @@ import ArchitectureMap from './ArchitectureMap'
 
 interface Props {
   repoId: string
-  commitHash: string
+  commitHash?: string
   onClose: () => void
 }
 

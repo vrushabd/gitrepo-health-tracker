@@ -12,7 +12,7 @@ import {
 } from '../types';
 
 const REPOS_DIR = process.env.REPOS_DIR || '/tmp/repopulse-repos';
-const MAX_COMMITS = parseInt(process.env.MAX_COMMITS || '500', 10);
+const MAX_COMMITS = parseInt(process.env.MAX_COMMITS || '2000', 10);
 
 function shouldIgnoreFile(filePath: string): boolean {
   const lower = filePath.toLowerCase();
